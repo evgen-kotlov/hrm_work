@@ -1,5 +1,11 @@
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'mcr.microsoft.com/playwright:v1.58.2-jammy'
+            // аргументы не обязательны, но можно добавить при необходимости
+            args '--user root'
+        }
+    }
     parameters {
         choice(
             name: 'TEST_TAG',
@@ -7,46 +13,23 @@ pipeline {
             description: 'Выберите набор тестов для запуска: smoke, regress или все.'
         )
     }
-    environment {
-        PLAYWRIGHT_BROWSERS_PATH = "${WORKSPACE}/ms-playwright"
-    }
     stages {
         stage('Checkout') {
             steps { checkout scm }
         }
-        stage('Setup and Run Tests') {
+        stage('Run Tests') {
             steps {
-                sh '''#!/bin/bash
+                sh '''
                     set -e
-                    set -x
-
-                    echo "=== Установка nvm ==="
-                    if [ ! -d "$HOME/.nvm" ]; then
-                        curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
-                    fi
-                    export NVM_DIR="$HOME/.nvm"
-                    [ -s "$NVM_DIR/nvm.sh" ] && source "$NVM_DIR/nvm.sh"
-
-                    echo "=== Установка Node.js 24.14.0 ==="
-                    nvm install 24.14.0
-                    nvm use 24.14.0
                     echo "Node version: $(node --version)"
                     echo "NPM version: $(npm --version)"
+                    echo "Playwright version: $(npx playwright --version)"
 
-                    echo "=== Установка зависимостей проекта ==="
+                    # Установка зависимостей проекта (требуется package-lock.json)
                     npm ci
 
-                    echo "=== Проверка версии Playwright ==="
-                    npx playwright --version
-
-                    echo "=== Установка браузеров Playwright в ${PLAYWRIGHT_BROWSERS_PATH} ==="
-                    # Убираем --with-deps, так как он требует root
-                    npx playwright install chromium
-
-                    echo "=== Содержимое папки браузеров ==="
-                    ls -la ${PLAYWRIGHT_BROWSERS_PATH} || echo "Папка не создана"
-
-                    echo "=== Запуск тестов с тегом: $TEST_TAG ==="
+                    # Браузеры уже предустановлены в образе, поэтому команда install не нужна
+                    # Запуск тестов в зависимости от выбранного параметра
                     case "$TEST_TAG" in
                         smoke)   npm run test:smoke ;;
                         regress) npm run test:regress ;;
@@ -70,11 +53,7 @@ pipeline {
             archiveArtifacts artifacts: 'allure-results/**', allowEmptyArchive: true
             cleanWs()
         }
-        failure {
-            echo '❌ Тесты упали. Подробности в отчете выше.'
-        }
-        success {
-            echo '✅ Все тесты прошли успешно!'
-        }
+        failure { echo '❌ Тесты упали. Подробности в отчете выше.' }
+        success { echo '✅ Все тесты прошли успешно!' }
     }
 }
