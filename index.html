@@ -1,0 +1,2725 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QA Tech - HR Management System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f8f9fa;
+            background-image: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        /* Login Page */
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .login-form {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            width: 400px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo h1 {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 32px;
+            font-weight: 700;
+        }
+
+        .logo .tagline {
+            color: #7f8c8d;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+            background-color: #f8f9fa;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            border-color: #667eea;
+            outline: none;
+            background-color: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-group input.error {
+            border-color: #e74c3c;
+            background-color: #fdf2f2;
+        }
+
+        .error-text {
+            color: #e74c3c;
+            font-size: 12px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .error-message {
+            color: #e74c3c;
+            margin-top: 10px;
+            text-align: center;
+            display: none;
+        }
+
+        /* Dashboard */
+        .dashboard {
+            display: none;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-menu button {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            cursor: pointer;
+            padding: 8px 15px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .user-menu button:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .user-role {
+            background-color: rgba(255, 255, 255, 0.2);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .sidebar {
+            width: 200px;
+            background: linear-gradient(180deg, #2c3e50, #34495e);
+            color: white;
+            height: calc(100vh - 60px);
+            position: fixed;
+            overflow-y: auto;
+            box-shadow: 2px 0 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding: 20px 0;
+        }
+
+        .sidebar li {
+            padding: 12px 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+            margin: 5px 0;
+        }
+
+        .sidebar li:hover {
+            background: linear-gradient(90deg, rgba(102, 126, 234, 0.2), transparent);
+            border-left-color: #667eea;
+        }
+
+        .sidebar li.active {
+            background: linear-gradient(90deg, rgba(102, 126, 234, 0.3), transparent);
+            border-left-color: #667eea;
+        }
+
+        .sidebar li.disabled {
+            color: #95a5a6;
+            cursor: not-allowed;
+        }
+
+        .sidebar li.disabled:hover {
+            background: transparent;
+            border-left-color: transparent;
+        }
+
+        .main-content {
+            margin-left: 180px;
+            padding: 30px;
+        }
+
+        .page {
+            display: none;
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        .page-header {
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f1f3f4;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .page-header h2 {
+            color: #2c3e50;
+            background: linear-gradient(135deg, #2c3e50, #667eea);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* About Page */
+        .about-section {
+            margin-bottom: 30px;
+        }
+
+        .about-section h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f1f3f4;
+        }
+
+        .feature-list {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .feature-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #f1f3f4;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .feature-list li:before {
+            content: "✓";
+            color: #2ecc71;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .validation-rules {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .validation-rules h4 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .rule-item {
+            margin-bottom: 15px;
+        }
+
+        .rule-item strong {
+            color: #2c3e50;
+        }
+
+        /* Employee List */
+        .table-container {
+            overflow-x: auto;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #f1f3f4;
+        }
+
+        th {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            font-weight: 600;
+        }
+
+        tr:hover {
+            background-color: #f8f9fa;
+            transform: scale(1.01);
+            transition: all 0.2s ease;
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            margin: 0 3px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .edit-btn {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+        }
+
+        .edit-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3);
+        }
+
+        .delete-btn {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+        }
+
+        .delete-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(231, 76, 60, 0.3);
+        }
+
+        .view-btn {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            color: white;
+        }
+
+        .view-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(46, 204, 113, 0.3);
+        }
+
+        /* Forms */
+        .form-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-column {
+            flex: 1;
+        }
+
+        .form-actions {
+            margin-top: 25px;
+            text-align: right;
+            padding-top: 20px;
+            border-top: 2px solid #f1f3f4;
+        }
+
+        .save-btn {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
+        }
+
+        .save-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(46, 204, 113, 0.4);
+        }
+
+        .cancel-btn {
+            background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-right: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .cancel-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(149, 165, 166, 0.3);
+        }
+
+        /* Search and Filters */
+        .search-box {
+            margin-bottom: 20px;
+        }
+
+        .search-box input {
+            width: 300px;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            background-color: #f8f9fa;
+            transition: all 0.3s ease;
+        }
+
+        .search-box input:focus {
+            border-color: #667eea;
+            outline: none;
+            background-color: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        /* File Upload */
+        .file-upload {
+            border: 2px dashed #bdc3c7;
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+            margin: 15px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background-color: #f8f9fa;
+        }
+
+        .file-upload:hover {
+            border-color: #667eea;
+            background-color: #ecf0f1;
+            transform: scale(1.02);
+        }
+
+        .file-list {
+            margin-top: 10px;
+        }
+
+        .file-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border: 1px solid #ecf0f1;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            background-color: #f8f9fa;
+            transition: all 0.3s ease;
+        }
+
+        .file-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .download-btn {
+            background: linear-gradient(135deg, #9b59b6, #8e44ad);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .download-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(155, 89, 182, 0.3);
+        }
+
+        /* Photo Upload */
+        .photo-upload {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .photo-preview {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid #667eea;
+            margin: 0 auto 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .photo-placeholder {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            margin: 0 auto 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 48px;
+            border: 4px solid #667eea;
+        }
+
+        .photo-upload-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .photo-upload-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            width: 500px;
+            max-width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            animation: modalSlideIn 0.3s ease;
+        }
+
+        @keyframes modalSlideIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f1f3f4;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #7f8c8d;
+            transition: all 0.3s ease;
+        }
+
+        .close-modal:hover {
+            color: #e74c3c;
+            transform: rotate(90deg);
+        }
+
+        /* Iframe Container */
+        .iframe-container {
+            border: 2px solid #f1f3f4;
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 15px 0;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .iframe-container iframe {
+            width: 100%;
+            height: 400px;
+            border: none;
+        }
+
+        /* Toast Notifications */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            z-index: 1100;
+            transform: translateX(150%);
+            transition: transform 0.3s ease;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast.error {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+
+        .toast.success {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #f1f3f4;
+            margin-bottom: 20px;
+            background: #f8f9fa;
+            border-radius: 8px 8px 0 0;
+            overflow: hidden;
+        }
+
+        .tab {
+            padding: 12px 20px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+            background: transparent;
+        }
+
+        .tab.active {
+            border-bottom-color: #667eea;
+            color: #667eea;
+            font-weight: 600;
+            background: white;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Employee Profile */
+        .profile-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f1f3f4;
+        }
+
+        .profile-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 42px;
+            color: white;
+            margin-right: 25px;
+            border: 4px solid #667eea;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .profile-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .profile-info h3 {
+            margin-bottom: 5px;
+            color: #2c3e50;
+            font-size: 24px;
+        }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 5px;
+        }
+
+        .pagination button {
+            padding: 8px 12px;
+            border: 2px solid #e9ecef;
+            background: white;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .pagination button:hover {
+            background-color: #ecf0f1;
+            transform: translateY(-1px);
+        }
+
+        .pagination button.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-color: #667eea;
+        }
+
+        /* Stats Cards */
+        .stats-container {
+            display: flex;
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            flex: 1;
+            border-left: 4px solid #667eea;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+        }
+
+        .stat-card h3 {
+            color: #7f8c8d;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .stat-card p {
+            color: #2c3e50;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        /* Dashboard Widgets */
+        .dashboard-widgets {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 25px;
+        }
+
+        .widget {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .widget:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+        }
+
+        .widget h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f1f3f4;
+        }
+
+        /* Access Denied */
+        .access-denied {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+        }
+
+        .access-denied h3 {
+            color: #e74c3c;
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+
+        /* Character Counter */
+        .char-counter {
+            text-align: right;
+            font-size: 12px;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+
+        .char-counter.near-limit {
+            color: #e67e22;
+        }
+
+        .char-counter.over-limit {
+            color: #e74c3c;
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Page -->
+    <div class="login-container" id="loginPage">
+        <div class="login-form">
+            <div class="logo">
+                <h1>QA Tech</h1>
+                <div class="tagline">HR Management System</div>
+            </div>
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" placeholder="Enter your username">
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" placeholder="Enter your password">
+            </div>
+            <button class="login-btn" onclick="login()">Login</button>
+            <div class="error-message" id="errorMessage">Invalid credentials. Please try again.</div>
+            <div style="margin-top: 20px; text-align: center; font-size: 14px; color: #7f8c8d;">
+                <p>Demo credentials:</p>
+                <p><strong>Admin:</strong> admin123 (Full access)</p>
+                <p><strong>User:</strong> user123 (Limited access)</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div class="dashboard" id="dashboard">
+        <div class="header">
+            <h2>QA Tech</h2>
+            <div class="user-menu">
+                <span>Welcome <span id="currentUserName">User</span></span>
+                <span class="user-role" id="userRole">Role</span>
+                <button onclick="logout()">Logout</button>
+            </div>
+        </div>
+        
+        <div class="sidebar">
+            <ul>
+                <li class="active" onclick="showPage('dashboardPage')">Dashboard</li>
+                <li onclick="showPage('addEmployeePage')">Add Employee</li>
+                <li onclick="showPage('employeeListPage')">Employee List</li>
+                <li onclick="showPage('documentsPage')">Documents</li>
+                <li onclick="showPage('reportsPage')">Reports</li>
+                <li id="settingsMenuItem" onclick="showPage('settingsPage')">Settings</li>
+                <li onclick="showPage('aboutPage')">About</li>
+            </ul>
+        </div>
+        
+        <div class="main-content">
+            <!-- Dashboard Page -->
+            <div class="page active" id="dashboardPage">
+                <div class="page-header">
+                    <h2>Dashboard</h2>
+                    <button class="action-btn view-btn" onclick="showNotification()">Show Notification</button>
+                </div>
+                <p>Welcome to QA Tech HR Management System! This is a demo application for test automation practice.</p>
+                
+                <div class="stats-container">
+                    <div class="stat-card">
+                        <h3>Total Employees</h3>
+                        <p id="totalEmployees">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Active Employees</h3>
+                        <p id="activeEmployees">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Departments</h3>
+                        <p id="totalDepartments">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Pending Tasks</h3>
+                        <p id="pendingTasks">3</p>
+                    </div>
+                </div>
+                
+                <div class="dashboard-widgets">
+                    <div class="widget">
+                        <h3>Recent Activities</h3>
+                        <ul id="recentActivities" style="list-style: none;">
+                            <li style="padding: 8px 0; border-bottom: 1px solid #f1f3f4;">No recent activities</li>
+                        </ul>
+                    </div>
+                    <div class="widget">
+                        <h3>Quick Actions</h3>
+                        <div style="display: flex; flex-direction: column; gap: 10px;">
+                            <button class="action-btn view-btn" onclick="showPage('addEmployeePage')">Add New Employee</button>
+                            <button class="action-btn edit-btn" onclick="showPage('reportsPage')">Generate Report</button>
+                            <button class="action-btn" style="background:linear-gradient(135deg, #9b59b6, #8e44ad); color:white;" onclick="exportToCSV()">Export Data</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="iframe-container" style="margin-top: 25px;">
+                    <iframe src="https://www.example.com" id="dashboardFrame" title="External Content"></iframe>
+                </div>
+                <div style="text-align: center; margin-top: 10px;">
+                    <button class="action-btn view-btn" onclick="changeIframeSource()">Change Iframe Content</button>
+                </div>
+            </div>
+
+            <!-- Add Employee Page -->
+            <div class="page" id="addEmployeePage">
+                <div class="page-header">
+                    <h2 id="employeeFormTitle">Add Employee</h2>
+                </div>
+                
+                <div class="tabs">
+                    <div class="tab active" onclick="switchTab('personalTab')">Personal Details</div>
+                    <div class="tab" onclick="switchTab('jobTab')">Job Details</div>
+                    <div class="tab" onclick="switchTab('documentsTab')">Documents</div>
+                </div>
+                
+                <form id="employeeForm">
+                    <div class="tab-content active" id="personalTab">
+                        <div class="photo-upload">
+                            <div id="photoPreview" class="photo-placeholder">
+                                👤
+                            </div>
+                            <input type="file" id="photoInput" accept="image/*" style="display: none;" onchange="handlePhotoUpload(this.files)">
+                            <button type="button" class="photo-upload-btn" onclick="document.getElementById('photoInput').click()">Upload Photo</button>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-column">
+                                <div class="form-group">
+                                    <label for="firstName">First Name *</label>
+                                    <input type="text" id="firstName" required maxlength="50" oninput="validateName(this, 'firstNameError')">
+                                    <div class="error-text" id="firstNameError">Only letters, spaces, apostrophes and hyphens are allowed (max 50 characters)</div>
+                                </div>
+                            </div>
+                            <div class="form-column">
+                                <div class="form-group">
+                                    <label for="lastName">Last Name *</label>
+                                    <input type="text" id="lastName" required maxlength="50" oninput="validateName(this, 'lastNameError')">
+                                    <div class="error-text" id="lastNameError">Only letters, spaces, apostrophes and hyphens are allowed (max 50 characters)</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-column">
+                                <div class="form-group">
+                                    <label for="employeeId">Employee ID</label>
+                                    <input type="text" id="employeeId" maxlength="20" oninput="validateEmployeeId(this, 'employeeIdError')">
+                                    <div class="error-text" id="employeeIdError">Only letters, numbers, hyphens and underscores are allowed (max 20 characters)</div>
+                                </div>
+                            </div>
+                            <div class="form-column">
+                                <div class="form-group">
+                                    <label for="email">Email *</label>
+                                    <input type="email" id="email" required maxlength="100" oninput="validateEmail(this, 'emailError')">
+                                    <div class="error-text" id="emailError">Please enter a valid email address (max 100 characters)</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-column">
+                                <div class="form-group">
+                                    <label for="department">Department</label>
+                                    <select id="department">
+                                        <option value="">Select Department</option>
+                                        <option value="IT">IT</option>
+                                        <option value="HR">HR</option>
+                                        <option value="Finance">Finance</option>
+                                        <option value="Marketing">Marketing</option>
+                                        <option value="QA">Quality Assurance</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-column">
+                                <div class="form-group">
+                                    <label for="position">Position</label>
+                                    <input type="text" id="position" maxlength="100" oninput="validatePosition(this, 'positionError')">
+                                    <div class="error-text" id="positionError">Only letters, numbers, spaces and basic punctuation are allowed (max 100 characters)</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="tab-content" id="jobTab">
+                        <div class="form-row">
+                            <div class="form-column">
+                                <div class="form-group">
+                                    <label for="joinDate">Join Date</label>
+                                    <input type="date" id="joinDate">
+                                </div>
+                            </div>
+                            <div class="form-column">
+                                <div class="form-group">
+                                    <label for="contractType">Contract Type</label>
+                                    <select id="contractType">
+                                        <option value="">Select Contract Type</option>
+                                        <option value="Full-time">Full-time</option>
+                                        <option value="Part-time">Part-time</option>
+                                        <option value="Contract">Contract</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-column">
+                                <div class="form-group">
+                                    <label for="salary">Salary ($)</label>
+                                    <input type="number" id="salary" placeholder="Annual salary" min="0" max="1000000" step="1000">
+                                    <div class="error-text" id="salaryError">Salary must be between $0 and $1,000,000</div>
+                                </div>
+                            </div>
+                            <div class="form-column">
+                                <div class="form-group">
+                                    <label for="status">Employment Status</label>
+                                    <select id="status">
+                                        <option value="Active">Active</option>
+                                        <option value="Inactive">Inactive</option>
+                                        <option value="On Leave">On Leave</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-column">
+                                <div class="form-group">
+                                    <label for="notes">Additional Notes</label>
+                                    <textarea id="notes" rows="4" maxlength="500" placeholder="Enter any additional notes about the employee..." oninput="updateCharCounter(this, 'notesCounter')"></textarea>
+                                    <div class="char-counter" id="notesCounter">0/500</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="tab-content" id="documentsTab">
+                        <div class="form-group">
+                            <label>Upload Documents</label>
+                            <div class="file-upload" onclick="document.getElementById('fileInput').click()">
+                                <p>Click to upload files or drag and drop</p>
+                                <p style="font-size: 12px; color: #7f8c8d;">Maximum file size: 10MB</p>
+                            </div>
+                            <input type="file" id="fileInput" multiple style="display: none;" onchange="handleFileUpload(this.files)">
+                            <div class="file-list" id="fileList">
+                                <!-- Uploaded files will appear here -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" class="cancel-btn" onclick="showPage('employeeListPage')">Cancel</button>
+                        <button type="button" class="save-btn" id="saveEmployeeBtn" onclick="saveEmployee()">Save Employee</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Employee List Page -->
+            <div class="page" id="employeeListPage">
+                <div class="page-header">
+                    <h2>Employee List</h2>
+                    <button class="save-btn" id="exportBtn" onclick="exportToCSV()">Export to CSV</button>
+                </div>
+                <div class="search-box">
+                    <input type="text" id="searchEmployee" placeholder="Search by employee name..." onkeyup="searchEmployees()">
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Photo</th>
+                                <th>Employee ID</th>
+                                <th>First Name</th>
+                                <th>Last Name</th>
+                                <th>Department</th>
+                                <th>Position</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="employeeList">
+                            <!-- Employee data will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+                <div class="pagination" id="pagination">
+                    <!-- Pagination buttons will be generated here -->
+                </div>
+            </div>
+
+            <!-- Documents Page -->
+            <div class="page" id="documentsPage">
+                <div class="page-header">
+                    <h2>Document Management</h2>
+                    <button class="save-btn" id="uploadDocBtn" onclick="showUploadModal()">Upload Document</button>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Document Name</th>
+                                <th>Type</th>
+                                <th>Size</th>
+                                <th>Upload Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="documentsList">
+                            <!-- Documents will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Reports Page -->
+            <div class="page" id="reportsPage">
+                <div class="page-header">
+                    <h2>Reports</h2>
+                    <button class="save-btn" id="generateReportBtn" onclick="generateReport()">Generate Report</button>
+                </div>
+                <div class="form-row">
+                    <div class="form-column">
+                        <div class="form-group">
+                            <label for="reportType">Report Type</label>
+                            <select id="reportType">
+                                <option value="employee">Employee List</option>
+                                <option value="department">Department Summary</option>
+                                <option value="salary">Salary Report</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-column">
+                        <div class="form-group">
+                            <label for="reportFormat">Format</label>
+                            <select id="reportFormat">
+                                <option value="pdf">PDF</option>
+                                <option value="csv">CSV</option>
+                                <option value="excel">Excel</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div id="reportOutput">
+                    <!-- Report output will be displayed here -->
+                </div>
+            </div>
+
+            <!-- Settings Page -->
+            <div class="page" id="settingsPage">
+                <div class="page-header">
+                    <h2>System Settings</h2>
+                </div>
+                <div id="settingsContent">
+                    <!-- Settings content will be populated based on user role -->
+                </div>
+            </div>
+
+            <!-- About Page -->
+            <div class="page" id="aboutPage">
+                <div class="page-header">
+                    <h2>About QA Tech HR System</h2>
+                </div>
+                
+                <div class="about-section">
+                    <h3>System Overview</h3>
+                    <p>QA Tech HR Management System is a comprehensive web application designed for managing employee information, documents, and generating reports. This application serves as an excellent platform for practicing test automation with various user roles, form validations, and complex UI interactions.</p>
+                </div>
+
+                <div class="about-section">
+                    <h3>User Roles & Permissions</h3>
+                    <ul class="feature-list">
+                        <li><strong>Admin User</strong> (Username: Admin, Password: admin123) - Full access to all features including employee management, document upload, report generation, and system settings</li>
+                        <li><strong>Regular User</strong> (Username: User, Password: user123) - Limited access with view-only permissions for most features, cannot modify data or access settings</li>
+                    </ul>
+                </div>
+
+                <div class="about-section">
+                    <h3>Core Features</h3>
+                    <ul class="feature-list">
+                        <li><strong>Employee Management</strong> - Add, view, edit, and delete employee records with photo uploads</li>
+                        <li><strong>Document Management</strong> - Upload, download, and organize company documents</li>
+                        <li><strong>Reporting System</strong> - Generate various reports (Employee List, Department Summary, Salary Report) in multiple formats</li>
+                        <li><strong>Dashboard Analytics</strong> - Visual statistics and recent activities overview</li>
+                        <li><strong>Search & Filtering</strong> - Find employees quickly with real-time search functionality</li>
+                        <li><strong>Pagination</strong> - Navigate through large datasets efficiently</li>
+                        <li><strong>Role-based Access Control</strong> - Different permissions for admin and regular users</li>
+                    </ul>
+                </div>
+
+                <div class="about-section">
+                    <h3>Input Validation Rules</h3>
+                    <div class="validation-rules">
+                        <div class="rule-item">
+                            <strong>First Name & Last Name:</strong>
+                            <ul>
+                                <li>Only letters, spaces, apostrophes (') and hyphens (-) allowed</li>
+                                <li>Maximum 50 characters</li>
+                                <li>Required field</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="rule-item">
+                            <strong>Employee ID:</strong>
+                            <ul>
+                                <li>Only letters, numbers, hyphens (-) and underscores (_) allowed</li>
+                                <li>Maximum 20 characters</li>
+                                <li>Optional field</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="rule-item">
+                            <strong>Email Address:</strong>
+                            <ul>
+                                <li>Must follow standard email format (user@domain.com)</li>
+                                <li>Maximum 100 characters</li>
+                                <li>Required field</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="rule-item">
+                            <strong>Position:</strong>
+                            <ul>
+                                <li>Letters, numbers, spaces and basic punctuation allowed</li>
+                                <li>Maximum 100 characters</li>
+                                <li>Optional field</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="rule-item">
+                            <strong>Salary:</strong>
+                            <ul>
+                                <li>Must be a number between 0 and 1,000,000</li>
+                                <li>Increments of 1000</li>
+                                <li>Optional field</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="rule-item">
+                            <strong>Additional Notes:</strong>
+                            <ul>
+                                <li>Maximum 500 characters</li>
+                                <li>Real-time character counter with color indicators</li>
+                                <li>Optional field</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="rule-item">
+                            <strong>File Uploads:</strong>
+                            <ul>
+                                <li>Maximum file size: 10MB</li>
+                                <li>Photo upload supported for employee profiles</li>
+                                <li>Multiple document upload supported</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="about-section">
+                    <h3>Technical Features</h3>
+                    <ul class="feature-list">
+                        <li><strong>Responsive Design</strong> - Works on desktop, tablet, and mobile devices</li>
+                        <li><strong>Modern UI/UX</strong> - Gradient colors, smooth animations, and intuitive navigation</li>
+                        <li><strong>Local Storage</strong> - All data persists in browser local storage</li>
+                        <li><strong>Form Validation</strong> - Real-time validation with visual feedback</li>
+                        <li><strong>Toast Notifications</strong> - User-friendly success and error messages</li>
+                        <li><strong>Modal Windows</strong> - For detailed views and additional actions</li>
+                        <li><strong>Tabbed Interfaces</strong> - Organized form sections for better user experience</li>
+                        <li><strong>Iframe Integration</strong> - External content display with dynamic source changing</li>
+                    </ul>
+                </div>
+
+                <div class="about-section">
+                    <h3>Test Automation Opportunities</h3>
+                    <p>This application provides numerous scenarios for test automation practice:</p>
+                    <ul class="feature-list">
+                        <li>User authentication and role-based testing</li>
+                        <li>Form validation testing with various input scenarios</li>
+                        <li>CRUD (Create, Read, Update, Delete) operations testing</li>
+                        <li>File upload and download functionality testing</li>
+                        <li>Search and pagination testing</li>
+                        <li>Modal and popup interaction testing</li>
+                        <li>Dynamic content and AJAX operation testing</li>
+                        <li>Cross-browser compatibility testing</li>
+                        <li>Responsive design testing</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Access Denied Page -->
+            <div class="page" id="accessDeniedPage">
+                <div class="access-denied">
+                    <h3>Access Denied</h3>
+                    <p>You don't have permission to access this section.</p>
+                    <p>Please contact your administrator for access.</p>
+                    <button class="save-btn" style="margin-top: 20px;" onclick="showPage('dashboardPage')">Return to Dashboard</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Employee Details -->
+    <div class="modal" id="employeeModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Employee Details</h3>
+                <button class="close-modal" onclick="closeModal('employeeModal')">&times;</button>
+            </div>
+            <div id="employeeDetails">
+                <!-- Employee details will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for File Upload -->
+    <div class="modal" id="uploadModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Upload Document</h3>
+                <button class="close-modal" onclick="closeModal('uploadModal')">&times;</button>
+            </div>
+            <div class="form-group">
+                <label for="documentName">Document Name</label>
+                <input type="text" id="documentName" placeholder="Enter document name" maxlength="100" oninput="updateCharCounter(this, 'documentNameCounter')">
+                <div class="char-counter" id="documentNameCounter">0/100</div>
+            </div>
+            <div class="form-group">
+                <label for="documentCategory">Category</label>
+                <select id="documentCategory">
+                    <option value="HR">HR Documents</option>
+                    <option value="Legal">Legal</option>
+                    <option value="Financial">Financial</option>
+                    <option value="QA">QA Documentation</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            <div class="file-upload" onclick="document.getElementById('modalFileInput').click()">
+                <p>Click to upload files or drag and drop</p>
+                <p style="font-size: 12px; color: #7f8c8d;">Maximum file size: 10MB</p>
+            </div>
+            <input type="file" id="modalFileInput" style="display: none;" onchange="handleModalFileUpload(this.files)">
+            <div class="form-actions">
+                <button type="button" class="cancel-btn" onclick="closeModal('uploadModal')">Cancel</button>
+                <button type="button" class="save-btn" onclick="saveDocument()">Upload</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        const API_BASE = 'http://localhost:3002/api';
+        let currentUser = null;
+        let authToken = null;
+        let currentEditId = null;
+        let currentPage = 1;
+        const itemsPerPage = 5;
+        let uploadedFiles = [];
+        let currentEmployeePhoto = null;
+    
+        // API functions
+        async function apiRequest(endpoint, options = {}) {
+            const config = {
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...options.headers
+                },
+                ...options
+            };
+    
+            if (authToken) {
+                config.headers.Authorization = `Bearer ${authToken}`;
+            }
+    
+            try {
+                const response = await fetch(`${API_BASE}${endpoint}`, config);
+                const data = await response.json();
+    
+                if (!response.ok) {
+                    throw new Error(data.error || 'API request failed');
+                }
+    
+                return data;
+            } catch (error) {
+                showToast(error.message, 'error');
+                throw error;
+            }
+        }
+    
+        // Validation functions
+        function validateName(input, errorId) {
+            const value = input.value;
+            const errorElement = document.getElementById(errorId);
+            const nameRegex = /^[A-Za-z\s'-]+$/;
+            
+            if (value && !nameRegex.test(value)) {
+                input.classList.add('error');
+                errorElement.style.display = 'block';
+                return false;
+            } else {
+                input.classList.remove('error');
+                errorElement.style.display = 'none';
+                return true;
+            }
+        }
+    
+        function validateEmployeeId(input, errorId) {
+            const value = input.value;
+            const errorElement = document.getElementById(errorId);
+            const idRegex = /^[A-Za-z0-9_-]*$/;
+            
+            if (value && !idRegex.test(value)) {
+                input.classList.add('error');
+                errorElement.style.display = 'block';
+                return false;
+            } else {
+                input.classList.remove('error');
+                errorElement.style.display = 'none';
+                return true;
+            }
+        }
+    
+        function validateEmail(input, errorId) {
+            const value = input.value;
+            const errorElement = document.getElementById(errorId);
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            
+            if (value && !emailRegex.test(value)) {
+                input.classList.add('error');
+                errorElement.style.display = 'block';
+                return false;
+            } else {
+                input.classList.remove('error');
+                errorElement.style.display = 'none';
+                return true;
+            }
+        }
+    
+        function validatePosition(input, errorId) {
+            const value = input.value;
+            const errorElement = document.getElementById(errorId);
+            const positionRegex = /^[A-Za-z0-9\s.,!?()-]*$/;
+            
+            if (value && !positionRegex.test(value)) {
+                input.classList.add('error');
+                errorElement.style.display = 'block';
+                return false;
+            } else {
+                input.classList.remove('error');
+                errorElement.style.display = 'none';
+                return true;
+            }
+        }
+    
+        function updateCharCounter(textarea, counterId) {
+            const counter = document.getElementById(counterId);
+            const length = textarea.value.length;
+            const maxLength = textarea.getAttribute('maxlength') || 100;
+            
+            counter.textContent = `${length}/${maxLength}`;
+            
+            if (length > maxLength * 0.9) {
+                counter.classList.add('over-limit');
+                counter.classList.remove('near-limit');
+            } else if (length > maxLength * 0.8) {
+                counter.classList.add('near-limit');
+                counter.classList.remove('over-limit');
+            } else {
+                counter.classList.remove('near-limit', 'over-limit');
+            }
+        }
+    
+        // Login function
+        async function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorMessage = document.getElementById('errorMessage');
+    
+            try {
+                const result = await apiRequest('/login', {
+                    method: 'POST',
+                    body: JSON.stringify({ username, password })
+                });
+    
+                if (result.success) {
+                    currentUser = result.user;
+                    authToken = result.token;
+                    
+                    document.getElementById('loginPage').style.display = 'none';
+                    document.getElementById('dashboard').style.display = 'block';
+                    
+                    updateUIForUserRole();
+                    updateDashboard();
+                    renderEmployeeList();
+                    renderDocumentsList();
+                    
+                    // Update URL for the dashboard
+                    updateURL('dashboardPage');
+                }
+            } catch (error) {
+                errorMessage.style.display = 'block';
+            }
+        }
+    
+        // Update UI based on user role
+        function updateUIForUserRole() {
+            document.getElementById('currentUserName').textContent = currentUser.name;
+            document.getElementById('userRole').textContent = currentUser.role === 'admin' ? 'Administrator' : 'User';
+            
+            const settingsMenuItem = document.getElementById('settingsMenuItem');
+            if (currentUser.role === 'user') {
+                settingsMenuItem.classList.add('disabled');
+            } else {
+                settingsMenuItem.classList.remove('disabled');
+            }
+            
+            const exportBtn = document.getElementById('exportBtn');
+            const uploadDocBtn = document.getElementById('uploadDocBtn');
+            const generateReportBtn = document.getElementById('generateReportBtn');
+            const saveEmployeeBtn = document.getElementById('saveEmployeeBtn');
+            
+            if (currentUser.role === 'user') {
+                if (exportBtn) exportBtn.style.display = 'none';
+                if (uploadDocBtn) uploadDocBtn.style.display = 'none';
+                if (generateReportBtn) generateReportBtn.style.display = 'none';
+                if (saveEmployeeBtn) saveEmployeeBtn.style.display = 'none';
+            } else {
+                if (exportBtn) exportBtn.style.display = 'inline-block';
+                if (uploadDocBtn) uploadDocBtn.style.display = 'inline-block';
+                if (generateReportBtn) generateReportBtn.style.display = 'inline-block';
+                if (saveEmployeeBtn) saveEmployeeBtn.style.display = 'inline-block';
+            }
+        }
+    
+        // Logout function
+        function logout() {
+            currentUser = null;
+            authToken = null;
+            document.getElementById('loginPage').style.display = 'flex';
+            document.getElementById('dashboard').style.display = 'none';
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+            document.getElementById('errorMessage').style.display = 'none';
+            
+            // Reset URL to root
+            window.history.pushState({}, '', '/');
+        }
+    
+        // Navigation function with role check
+        function showPage(pageId) {
+            if (pageId === 'settingsPage' && currentUser.role === 'user') {
+                showPage('accessDeniedPage');
+                return;
+            }
+            
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            document.getElementById(pageId).classList.add('active');
+            
+            document.querySelectorAll('.sidebar li').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            const pageIndex = {
+                'dashboardPage': 0,
+                'addEmployeePage': 1,
+                'employeeListPage': 2,
+                'documentsPage': 3,
+                'reportsPage': 4,
+                'settingsPage': 5,
+                'aboutPage': 6,
+                'accessDeniedPage': -1
+            };
+            
+            if (pageIndex[pageId] !== undefined && pageIndex[pageId] !== -1) {
+                document.querySelectorAll('.sidebar li')[pageIndex[pageId]].classList.add('active');
+            }
+            
+            if (pageId === 'employeeListPage') {
+                renderEmployeeList();
+            } else if (pageId === 'documentsPage') {
+                renderDocumentsList();
+            } else if (pageId === 'addEmployeePage') {
+                if (!currentEditId) {
+                    clearEmployeeForm();
+                }
+            } else if (pageId === 'dashboardPage') {
+                updateDashboard();
+            } else if (pageId === 'settingsPage') {
+                renderSettingsPage();
+            }
+            
+            // Update URL
+            updateURL(pageId);
+        }
+    
+        // Function to update URL when navigating
+        function updateURL(pageId) {
+            const pageMap = {
+                'dashboardPage': 'dashboard',
+                'addEmployeePage': 'add-employee',
+                'employeeListPage': 'employees',
+                'documentsPage': 'documents',
+                'reportsPage': 'reports',
+                'settingsPage': 'settings',
+                'aboutPage': 'about',
+                'accessDeniedPage': 'access-denied'
+            };
+            
+            const pageSlug = pageMap[pageId] || 'dashboard';
+            const newURL = `${window.location.origin}/${pageSlug}`;
+            window.history.pushState({ pageId }, '', newURL);
+        }
+    
+        // Handle browser back/forward buttons
+        window.addEventListener('popstate', function(event) {
+            if (event.state && event.state.pageId) {
+                showPage(event.state.pageId);
+            } else {
+                // Default to dashboard
+                showPage('dashboardPage');
+            }
+        });
+    
+        // Update dashboard stats
+        async function updateDashboard() {
+            try {
+                const data = await apiRequest('/dashboard/stats');
+                
+                document.getElementById('totalEmployees').textContent = data.totalEmployees;
+                document.getElementById('activeEmployees').textContent = data.activeEmployees;
+                document.getElementById('totalDepartments').textContent = data.totalDepartments;
+                document.getElementById('pendingTasks').textContent = data.pendingTasks;
+                
+                const activities = document.getElementById('recentActivities');
+                if (data.recentActivities.length > 0) {
+                    activities.innerHTML = data.recentActivities.map(activity => `
+                        <li style="padding: 8px 0; border-bottom: 1px solid #f1f3f4;">
+                            <strong>${activity.message}</strong>
+                        </li>
+                    `).join('');
+                } else {
+                    activities.innerHTML = '<li style="padding: 8px 0; border-bottom: 1px solid #f1f3f4;">No recent activities</li>';
+                }
+            } catch (error) {
+                console.error('Failed to update dashboard:', error);
+            }
+        }
+    
+        // Employee management functions
+        async function saveEmployee() {
+            if (currentUser.role === 'user') {
+                showToast('You do not have permission to add employees', 'error');
+                return;
+            }
+    
+            // Validate all fields
+            const firstNameValid = validateName(document.getElementById('firstName'), 'firstNameError');
+            const lastNameValid = validateName(document.getElementById('lastName'), 'lastNameError');
+            const employeeIdValid = validateEmployeeId(document.getElementById('employeeId'), 'employeeIdError');
+            const emailValid = validateEmail(document.getElementById('email'), 'emailError');
+            const positionValid = validatePosition(document.getElementById('position'), 'positionError');
+    
+            if (!firstNameValid || !lastNameValid || !emailValid) {
+                showToast('Please fix validation errors before saving', 'error');
+                return;
+            }
+    
+            const formData = new FormData();
+            
+            // Add fields one by one
+            formData.append('firstName', document.getElementById('firstName').value);
+            formData.append('lastName', document.getElementById('lastName').value);
+            formData.append('employeeId', document.getElementById('employeeId').value);
+            formData.append('email', document.getElementById('email').value);
+            formData.append('department', document.getElementById('department').value);
+            formData.append('position', document.getElementById('position').value);
+            formData.append('joinDate', document.getElementById('joinDate').value);
+            formData.append('contractType', document.getElementById('contractType').value);
+            formData.append('salary', document.getElementById('salary').value);
+            formData.append('status', document.getElementById('status').value);
+            formData.append('notes', document.getElementById('notes').value);
+    
+            const photoInput = document.getElementById('photoInput');
+            if (photoInput.files[0]) {
+                formData.append('photo', photoInput.files[0]);
+            }
+    
+            try {
+                let response;
+                const headers = {
+                    'Authorization': `Bearer ${authToken}`
+                };
+                
+                if (currentEditId) {
+                    // Update employee
+                    response = await fetch(`${API_BASE}/employees/${currentEditId}`, {
+                        method: 'PUT',
+                        headers: headers,
+                        body: formData
+                    });
+                    
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || 'Failed to update employee');
+                    }
+                    
+                    showToast('Employee updated successfully');
+                } else {
+                    // Create new employee
+                    response = await fetch(`${API_BASE}/employees`, {
+                        method: 'POST',
+                        headers: headers,
+                        body: formData
+                    });
+                    
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || 'Failed to add employee');
+                    }
+                    
+                    showToast('Employee added successfully');
+                }
+    
+                const employeeData = await response.json();
+                console.log('Employee saved:', employeeData);
+                
+                showPage('employeeListPage');
+                clearEmployeeForm();
+                updateDashboard();
+            } catch (error) {
+                showToast(error.message, 'error');
+                console.error('Error saving employee:', error);
+            }
+        }
+    
+        async function renderEmployeeList() {
+            try {
+                const data = await apiRequest(`/employees?page=${currentPage}&limit=${itemsPerPage}`);
+                const tbody = document.getElementById('employeeList');
+                const pagination = document.getElementById('pagination');
+                
+                if (data.employees && data.employees.length > 0) {
+                    tbody.innerHTML = data.employees.map(employee => `
+                        <tr>
+                            <td>
+                                ${employee.photo ? 
+                                    `<img src="http://localhost:3001${employee.photo}" alt="${employee.firstName}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">` : 
+                                    `<div style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #667eea, #764ba2); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">${employee.firstName?.charAt(0) || ''}${employee.lastName?.charAt(0) || ''}</div>`
+                                }
+                            </td>
+                            <td>${employee.employeeId || 'N/A'}</td>
+                            <td>${employee.firstName || ''}</td>
+                            <td>${employee.lastName || ''}</td>
+                            <td>${employee.department || '-'}</td>
+                            <td>${employee.position || '-'}</td>
+                            <td>
+                                <span style="padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: 500; 
+                                    ${employee.status === 'Active' ? 'background: #d4edda; color: #155724;' : 
+                                      employee.status === 'On Leave' ? 'background: #fff3cd; color: #856404;' : 
+                                      'background: #f8d7da; color: #721c24;'}">
+                                    ${employee.status || 'Inactive'}
+                                </span>
+                            </td>
+                            <td>
+                                <button class="action-btn view-btn" onclick="viewEmployee('${employee.id}')">View</button>
+                                ${currentUser.role === 'admin' ? `
+                                    <button class="action-btn edit-btn" onclick="editEmployee('${employee.id}')">Edit</button>
+                                    <button class="action-btn delete-btn" onclick="deleteEmployee('${employee.id}')">Delete</button>
+                                ` : ''}
+                            </td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="8" style="text-align: center; padding: 40px; color: #7f8c8d;">
+                                No employees found. Click "Add Employee" to create your first employee.
+                            </td>
+                        </tr>
+                    `;
+                }
+                
+                let paginationHTML = '';
+                if (currentPage > 1) {
+                    paginationHTML += `<button onclick="changePage(${currentPage - 1})">Previous</button>`;
+                }
+                
+                for (let i = 1; i <= data.totalPages; i++) {
+                    paginationHTML += `<button class="${i === currentPage ? 'active' : ''}" onclick="changePage(${i})">${i}</button>`;
+                }
+                
+                if (currentPage < data.totalPages) {
+                    paginationHTML += `<button onclick="changePage(${currentPage + 1})">Next</button>`;
+                }
+                
+                pagination.innerHTML = paginationHTML;
+            } catch (error) {
+                console.error('Failed to load employees:', error);
+                showToast('Failed to load employees', 'error');
+            }
+        }
+    
+        async function viewEmployee(id) {
+            try {
+                const employee = await apiRequest(`/employees/${id}`);
+                const modal = document.getElementById('employeeModal');
+                const details = document.getElementById('employeeDetails');
+                
+                details.innerHTML = `
+                    <div class="profile-header">
+                        <div class="profile-avatar">
+                            ${employee.photo ? 
+                                `<img src="http://localhost:3001${employee.photo}" alt="${employee.firstName} ${employee.lastName}">` : 
+                                `${employee.firstName?.charAt(0) || ''}${employee.lastName?.charAt(0) || ''}`
+                            }
+                        </div>
+                        <div class="profile-info">
+                            <h3>${employee.firstName || ''} ${employee.lastName || ''}</h3>
+                            <p>${employee.position || 'No position specified'}</p>
+                            <p>${employee.department || 'No department specified'}</p>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-column">
+                            <div class="form-group">
+                                <label><strong>Employee ID:</strong></label>
+                                <p>${employee.employeeId || 'N/A'}</p>
+                            </div>
+                        </div>
+                        <div class="form-column">
+                            <div class="form-group">
+                                <label><strong>Email:</strong></label>
+                                <p>${employee.email || 'N/A'}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-column">
+                            <div class="form-group">
+                                <label><strong>Join Date:</strong></label>
+                                <p>${employee.joinDate || 'Not specified'}</p>
+                            </div>
+                        </div>
+                        <div class="form-column">
+                            <div class="form-group">
+                                <label><strong>Contract Type:</strong></label>
+                                <p>${employee.contractType || 'Not specified'}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-column">
+                            <div class="form-group">
+                                <label><strong>Salary:</strong></label>
+                                <p>${employee.salary ? '$' + employee.salary.toLocaleString() : 'Not specified'}</p>
+                            </div>
+                        </div>
+                        <div class="form-column">
+                            <div class="form-group">
+                                <label><strong>Status:</strong></label>
+                                <p>${employee.status || 'Not specified'}</p>
+                            </div>
+                        </div>
+                    </div>
+                    ${employee.notes ? `
+                    <div class="form-row">
+                        <div class="form-column">
+                            <div class="form-group">
+                                <label><strong>Additional Notes:</strong></label>
+                                <p>${employee.notes}</p>
+                            </div>
+                        </div>
+                    </div>
+                    ` : ''}
+                `;
+                
+                modal.style.display = 'flex';
+            } catch (error) {
+                console.error('Failed to load employee:', error);
+                showToast('Failed to load employee details', 'error');
+            }
+        }
+    
+        async function editEmployee(id) {
+            if (currentUser.role === 'user') {
+                showToast('You do not have permission to edit employees', 'error');
+                return;
+            }
+    
+            try {
+                const employee = await apiRequest(`/employees/${id}`);
+                currentEditId = employee.id;
+                
+                document.getElementById('employeeFormTitle').textContent = 'Edit Employee';
+                document.getElementById('saveEmployeeBtn').textContent = 'Update Employee';
+                
+                document.getElementById('firstName').value = employee.firstName || '';
+                document.getElementById('lastName').value = employee.lastName || '';
+                document.getElementById('employeeId').value = employee.employeeId || '';
+                document.getElementById('email').value = employee.email || '';
+                document.getElementById('department').value = employee.department || '';
+                document.getElementById('position').value = employee.position || '';
+                document.getElementById('joinDate').value = employee.joinDate || '';
+                document.getElementById('contractType').value = employee.contractType || '';
+                document.getElementById('salary').value = employee.salary || '';
+                document.getElementById('status').value = employee.status || 'Active';
+                document.getElementById('notes').value = employee.notes || '';
+                
+                const preview = document.getElementById('photoPreview');
+                if (employee.photo) {
+                    preview.innerHTML = `<img src="http://localhost:3000${employee.photo}" alt="Employee Photo" class="photo-preview">`;
+                } else {
+                    preview.innerHTML = '👤';
+                    preview.className = 'photo-placeholder';
+                }
+                
+                showPage('addEmployeePage');
+            } catch (error) {
+                console.error('Failed to load employee for editing:', error);
+                showToast('Failed to load employee for editing', 'error');
+            }
+        }
+    
+        async function deleteEmployee(id) {
+            if (currentUser.role === 'user') {
+                showToast('You do not have permission to delete employees', 'error');
+                return;
+            }
+    
+            if (confirm('Are you sure you want to delete this employee?')) {
+                try {
+                    await apiRequest(`/employees/${id}`, { method: 'DELETE' });
+                    updateDashboard();
+                    renderEmployeeList();
+                    showToast('Employee deleted successfully');
+                } catch (error) {
+                    console.error('Failed to delete employee:', error);
+                    showToast('Failed to delete employee', 'error');
+                }
+            }
+        }
+    
+        function changePage(page) {
+            currentPage = page;
+            renderEmployeeList();
+        }
+    
+        // Search employees
+        async function searchEmployees() {
+            const searchTerm = document.getElementById('searchEmployee').value;
+            currentPage = 1;
+            
+            try {
+                const data = await apiRequest(`/employees?page=${currentPage}&limit=${itemsPerPage}&search=${encodeURIComponent(searchTerm)}`);
+                const tbody = document.getElementById('employeeList');
+                const pagination = document.getElementById('pagination');
+                
+                if (data.employees && data.employees.length > 0) {
+                    tbody.innerHTML = data.employees.map(employee => `
+                        <tr>
+                            <td>
+                                ${employee.photo ? 
+                                    `<img src="http://localhost:3001${employee.photo}" alt="${employee.firstName}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">` : 
+                                    `<div style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #667eea, #764ba2); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">${employee.firstName?.charAt(0) || ''}${employee.lastName?.charAt(0) || ''}</div>`
+                                }
+                            </td>
+                            <td>${employee.employeeId || 'N/A'}</td>
+                            <td>${employee.firstName || ''}</td>
+                            <td>${employee.lastName || ''}</td>
+                            <td>${employee.department || '-'}</td>
+                            <td>${employee.position || '-'}</td>
+                            <td>
+                                <span style="padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: 500; 
+                                    ${employee.status === 'Active' ? 'background: #d4edda; color: #155724;' : 
+                                      employee.status === 'On Leave' ? 'background: #fff3cd; color: #856404;' : 
+                                      'background: #f8d7da; color: #721c24;'}">
+                                    ${employee.status || 'Inactive'}
+                                </span>
+                            </td>
+                            <td>
+                                <button class="action-btn view-btn" onclick="viewEmployee('${employee.id}')">View</button>
+                                ${currentUser.role === 'admin' ? `
+                                    <button class="action-btn edit-btn" onclick="editEmployee('${employee.id}')">Edit</button>
+                                    <button class="action-btn delete-btn" onclick="deleteEmployee('${employee.id}')">Delete</button>
+                                ` : ''}
+                            </td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="8" style="text-align: center; padding: 40px; color: #7f8c8d;">
+                                No employees found matching "${searchTerm}".
+                            </td>
+                        </tr>
+                    `;
+                }
+                
+                let paginationHTML = '';
+                if (currentPage > 1) {
+                    paginationHTML += `<button onclick="changePage(${currentPage - 1})">Previous</button>`;
+                }
+                
+                for (let i = 1; i <= data.totalPages; i++) {
+                    paginationHTML += `<button class="${i === currentPage ? 'active' : ''}" onclick="changePage(${i})">${i}</button>`;
+                }
+                
+                if (currentPage < data.totalPages) {
+                    paginationHTML += `<button onclick="changePage(${currentPage + 1})">Next</button>`;
+                }
+                
+                pagination.innerHTML = paginationHTML;
+            } catch (error) {
+                console.error('Search failed:', error);
+            }
+        }
+    
+        // Document management
+        async function renderDocumentsList() {
+            try {
+                const documents = await apiRequest('/documents');
+                const tbody = document.getElementById('documentsList');
+                
+                if (documents && documents.length > 0) {
+                    tbody.innerHTML = documents.map(doc => `
+                        <tr>
+                            <td>${doc.name}</td>
+                            <td>${doc.category}</td>
+                            <td>${formatFileSize(doc.size)}</td>
+                            <td>${doc.uploadDate}</td>
+                            <td>
+                                <button class="action-btn view-btn" onclick="downloadDocument('${doc.id}')">Download</button>
+                                ${currentUser.role === 'admin' ? `
+                                    <button class="action-btn delete-btn" onclick="deleteDocument('${doc.id}')">Delete</button>
+                                ` : ''}
+                            </td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="5" style="text-align: center; padding: 40px; color: #7f8c8d;">
+                                No documents uploaded yet.
+                            </td>
+                        </tr>
+                    `;
+                }
+            } catch (error) {
+                console.error('Failed to load documents:', error);
+                showToast('Failed to load documents', 'error');
+            }
+        }
+    
+        async function saveDocument() {
+            const name = document.getElementById('documentName').value;
+            const category = document.getElementById('documentCategory').value;
+            const fileInput = document.getElementById('modalFileInput');
+            
+            if (!name || fileInput.files.length === 0) {
+                showToast('Please provide document name and select a file', 'error');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('name', name);
+            formData.append('category', category);
+            formData.append('document', fileInput.files[0]);
+    
+            try {
+                const response = await fetch(`${API_BASE}/documents`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Failed to upload document');
+                }
+                
+                closeModal('uploadModal');
+                renderDocumentsList();
+                showToast('Document uploaded successfully');
+                
+                document.getElementById('documentName').value = '';
+                document.getElementById('documentCategory').value = 'HR';
+                fileInput.value = '';
+                document.getElementById('documentNameCounter').textContent = '0/100';
+            } catch (error) {
+                console.error('Failed to upload document:', error);
+                showToast(error.message, 'error');
+            }
+        }
+    
+        async function downloadDocument(id) {
+            try {
+                const response = await fetch(`${API_BASE}/documents/${id}/download`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Download failed');
+                }
+                
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `document-${id}`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                
+                showToast('Document download started');
+            } catch (error) {
+                console.error('Failed to download document:', error);
+                showToast('Failed to download document', 'error');
+            }
+        }
+    
+        async function deleteDocument(id) {
+            if (currentUser.role === 'user') {
+                showToast('You do not have permission to delete documents', 'error');
+                return;
+            }
+    
+            if (confirm('Are you sure you want to delete this document?')) {
+                try {
+                    await apiRequest(`/documents/${id}`, { method: 'DELETE' });
+                    renderDocumentsList();
+                    showToast('Document deleted successfully');
+                } catch (error) {
+                    console.error('Failed to delete document:', error);
+                    showToast('Failed to delete document', 'error');
+                }
+            }
+        }
+    
+        // Reports
+        async function generateReport() {
+    if (currentUser.role === 'user') {
+        showToast('You do not have permission to generate reports', 'error');
+        return;
+    }
+
+    const reportType = document.getElementById('reportType').value;
+    const reportFormat = document.getElementById('reportFormat').value;
+
+    try {
+        // Если выбран CSV формат, скачиваем файл напрямую
+        if (reportFormat === 'csv') {
+            const response = await fetch(`${API_BASE}/reports/generate`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${authToken}`
+                },
+                body: JSON.stringify({ reportType, reportFormat })
+            });
+
+            if (!response.ok) {
+                throw new Error('Report generation failed');
+            }
+
+            // Скачиваем CSV файл
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            
+            // Имя файла в зависимости от типа отчета
+            const fileName = `${reportType}-report-${new Date().toISOString().split('T')[0]}.csv`;
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+
+            showToast(`${reportType} report downloaded as CSV`);
+            return;
+        }
+
+        // Для PDF и Excel показываем предварительный просмотр
+        const result = await apiRequest('/reports/generate', {
+            method: 'POST',
+            body: JSON.stringify({ reportType, reportFormat })
+        });
+
+        const output = document.getElementById('reportOutput');
+        let reportContent = '';
+
+        if (reportType === 'employee') {
+            reportContent = `
+                <h3>${result.report.title}</h3>
+                <p><strong>Total Employees:</strong> ${result.report.totalEmployees}</p>
+                <p><strong>Active Employees:</strong> ${result.report.activeEmployees}</p>
+                <p><strong>Employees on Leave:</strong> ${result.report.employeesOnLeave}</p>
+                
+                ${reportFormat === 'pdf' || reportFormat === 'excel' ? `
+                <div style="margin-top: 20px;">
+                    <p><em>Note: In a real application, this would generate and download a ${reportFormat.toUpperCase()} file.</em></p>
+                    <button class="save-btn" onclick="downloadReport('${reportType}', '${reportFormat}')" style="margin-top: 10px;">
+                        Download ${reportFormat.toUpperCase()} Report
+                    </button>
+                </div>
+                ` : ''}
+            `;
+        } else if (reportType === 'department') {
+            let departmentsHTML = '';
+            if (result.report.departments) {
+                departmentsHTML = Object.entries(result.report.departments).map(([dept, count]) => `
+                    <p><strong>${dept}:</strong> ${count} employees (${((count / result.report.totalEmployees) * 100).toFixed(2)}%)</p>
+                `).join('');
+            }
+            
+            reportContent = `
+                <h3>${result.report.title}</h3>
+                ${departmentsHTML}
+                
+                ${reportFormat === 'pdf' || reportFormat === 'excel' ? `
+                <div style="margin-top: 20px;">
+                    <p><em>Note: In a real application, this would generate and download a ${reportFormat.toUpperCase()} file.</em></p>
+                    <button class="save-btn" onclick="downloadReport('${reportType}', '${reportFormat}')" style="margin-top: 10px;">
+                        Download ${reportFormat.toUpperCase()} Report
+                    </button>
+                </div>
+                ` : ''}
+            `;
+        } else if (reportType === 'salary') {
+            reportContent = `
+                <h3>${result.report.title}</h3>
+                <p><strong>Total Salary Expense:</strong> $${result.report.totalSalary.toLocaleString()}</p>
+                <p><strong>Average Salary:</strong> $${result.report.averageSalary.toLocaleString()}</p>
+                <p><strong>Minimum Salary:</strong> $${result.report.minSalary.toLocaleString()}</p>
+                <p><strong>Maximum Salary:</strong> $${result.report.maxSalary.toLocaleString()}</p>
+                
+                ${reportFormat === 'pdf' || reportFormat === 'excel' ? `
+                <div style="margin-top: 20px;">
+                    <p><em>Note: In a real application, this would generate and download a ${reportFormat.toUpperCase()} file.</em></p>
+                    <button class="save-btn" onclick="downloadReport('${reportType}', '${reportFormat}')" style="margin-top: 10px;">
+                        Download ${reportFormat.toUpperCase()} Report
+                    </button>
+                </div>
+                ` : ''}
+            `;
+        }
+
+        output.innerHTML = `
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 5px; margin-top: 20px;">
+                ${reportContent}
+                <p style="margin-top: 15px;"><em>Report generated on ${new Date(result.generatedAt).toLocaleDateString()} at ${new Date(result.generatedAt).toLocaleTimeString()}</em></p>
+            </div>
+        `;
+
+        if (reportFormat !== 'csv') {
+            showToast(`${reportType} report generated in ${reportFormat.toUpperCase()} format`);
+        }
+    } catch (error) {
+        console.error('Failed to generate report:', error);
+        showToast('Failed to generate report', 'error');
+    }
+}
+
+// Новая функция для скачивания отчетов в PDF/Excel формате
+async function downloadReport(reportType, reportFormat) {
+    try {
+        // В реальном приложении здесь был бы запрос на скачивание файла
+        // Покажем сообщение, что это демо-версия
+        showToast(`In a real application, this would download the ${reportType} report as ${reportFormat.toUpperCase()}`, 'success');
+        
+        // Для демо создаем и скачиваем CSV файл вместо PDF/Excel
+        if (reportFormat === 'pdf' || reportFormat === 'excel') {
+            // Используем CSV для демо
+            const response = await fetch(`${API_BASE}/reports/generate`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${authToken}`
+                },
+                body: JSON.stringify({ 
+                    reportType, 
+                    reportFormat: 'csv' // Используем CSV для демо
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('Download failed');
+            }
+
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${reportType}-report-${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+
+            showToast(`Demo: ${reportType} report downloaded as CSV (${reportFormat.toUpperCase()} would require additional libraries)`);
+        }
+    } catch (error) {
+        console.error('Failed to download report:', error);
+        showToast('Failed to download report', 'error');
+    }
+}
+    
+        // Settings
+        async function renderSettingsPage() {
+            const settingsContent = document.getElementById('settingsContent');
+            
+            if (currentUser.role === 'admin') {
+                try {
+                    const settings = await apiRequest('/settings');
+                    
+                    settingsContent.innerHTML = `
+                        <div class="form-row">
+                            <div class="form-column">
+                                <div class="form-group">
+                                    <label for="companyName">Company Name</label>
+                                    <input type="text" id="companyName" value="${settings.companyName}">
+                                </div>
+                            </div>
+                            <div class="form-column">
+                                <div class="form-group">
+                                    <label for="timezone">Timezone</label>
+                                    <select id="timezone">
+                                        <option value="UTC-5" ${settings.timezone === 'UTC-5' ? 'selected' : ''}>UTC-5 (Eastern Time)</option>
+                                        <option value="UTC-8" ${settings.timezone === 'UTC-8' ? 'selected' : ''}>UTC-8 (Pacific Time)</option>
+                                        <option value="UTC+0" ${settings.timezone === 'UTC+0' ? 'selected' : ''}>UTC+0 (GMT)</option>
+                                        <option value="UTC+1" ${settings.timezone === 'UTC+1' ? 'selected' : ''}>UTC+1 (Central European Time)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-column">
+                                <div class="form-group">
+                                    <label for="language">Language</label>
+                                    <select id="language">
+                                        <option value="en" ${settings.language === 'en' ? 'selected' : ''}>English</option>
+                                        <option value="es" ${settings.language === 'es' ? 'selected' : ''}>Spanish</option>
+                                        <option value="fr" ${settings.language === 'fr' ? 'selected' : ''}>French</option>
+                                        <option value="de" ${settings.language === 'de' ? 'selected' : ''}>German</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-column">
+                                <div class="form-group">
+                                    <label for="dateFormat">Date Format</label>
+                                    <select id="dateFormat">
+                                        <option value="mm/dd/yyyy" ${settings.dateFormat === 'mm/dd/yyyy' ? 'selected' : ''}>MM/DD/YYYY</option>
+                                        <option value="dd/mm/yyyy" ${settings.dateFormat === 'dd/mm/yyyy' ? 'selected' : ''}>DD/MM/YYYY</option>
+                                        <option value="yyyy-mm-dd" ${settings.dateFormat === 'yyyy-mm-dd' ? 'selected' : ''}>YYYY-MM-DD</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="cancel-btn" onclick="resetSettings()">Reset</button>
+                            <button type="button" class="save-btn" onclick="saveSettings()">Save Settings</button>
+                        </div>
+                    `;
+                } catch (error) {
+                    console.error('Failed to load settings:', error);
+                    settingsContent.innerHTML = `
+                        <div class="access-denied">
+                            <h3>Error Loading Settings</h3>
+                            <p>Failed to load settings. Please try again.</p>
+                        </div>
+                    `;
+                }
+            } else {
+                settingsContent.innerHTML = `
+                    <div class="access-denied">
+                        <h3>Access Denied</h3>
+                        <p>You don't have permission to access system settings.</p>
+                        <p>Please contact your administrator for access.</p>
+                    </div>
+                `;
+            }
+        }
+    
+        async function saveSettings() {
+            try {
+                const settings = {
+                    companyName: document.getElementById('companyName').value,
+                    timezone: document.getElementById('timezone').value,
+                    language: document.getElementById('language').value,
+                    dateFormat: document.getElementById('dateFormat').value
+                };
+    
+                await apiRequest('/settings', {
+                    method: 'PUT',
+                    body: JSON.stringify(settings)
+                });
+    
+                showToast('Settings saved successfully');
+            } catch (error) {
+                console.error('Failed to save settings:', error);
+                showToast('Failed to save settings', 'error');
+            }
+        }
+    
+        async function resetSettings() {
+            try {
+                const defaultSettings = {
+                    companyName: 'QA Tech',
+                    timezone: 'UTC-5',
+                    language: 'en',
+                    dateFormat: 'mm/dd/yyyy'
+                };
+    
+                await apiRequest('/settings', {
+                    method: 'PUT',
+                    body: JSON.stringify(defaultSettings)
+                });
+    
+                renderSettingsPage();
+                showToast('Settings reset to defaults');
+            } catch (error) {
+                console.error('Failed to reset settings:', error);
+                showToast('Failed to reset settings', 'error');
+            }
+        }
+    
+        // Utility functions
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+    
+        function clearEmployeeForm() {
+            document.getElementById('employeeForm').reset();
+            document.getElementById('fileList').innerHTML = '';
+            
+            const preview = document.getElementById('photoPreview');
+            preview.innerHTML = '👤';
+            preview.className = 'photo-placeholder';
+            currentEmployeePhoto = null;
+            
+            document.querySelectorAll('.error-text').forEach(error => {
+                error.style.display = 'none';
+            });
+            document.querySelectorAll('.form-group input').forEach(input => {
+                input.classList.remove('error');
+            });
+            
+            document.getElementById('employeeFormTitle').textContent = 'Add Employee';
+            document.getElementById('saveEmployeeBtn').textContent = 'Save Employee';
+            
+            currentEditId = null;
+            uploadedFiles = [];
+            
+            switchTab('personalTab');
+            
+            // Reset character counters
+            document.getElementById('notesCounter').textContent = '0/500';
+            document.getElementById('notesCounter').classList.remove('near-limit', 'over-limit');
+        }
+    
+        function handlePhotoUpload(files) {
+            if (files.length > 0) {
+                const file = files[0];
+                if (!file.type.match('image.*')) {
+                    showToast('Please select an image file', 'error');
+                    return;
+                }
+                
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    currentEmployeePhoto = e.target.result;
+                    const preview = document.getElementById('photoPreview');
+                    preview.innerHTML = `<img src="${e.target.result}" alt="Employee Photo" class="photo-preview">`;
+                };
+                
+                reader.readAsDataURL(file);
+            }
+        }
+    
+        function handleFileUpload(files) {
+            if (currentUser.role === 'user') {
+                showToast('You do not have permission to upload files', 'error');
+                return;
+            }
+    
+            const fileList = document.getElementById('fileList');
+            fileList.innerHTML = '';
+            
+            Array.from(files).forEach(file => {
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item';
+                fileItem.innerHTML = `
+                    <span>${file.name} (${formatFileSize(file.size)})</span>
+                `;
+                fileList.appendChild(fileItem);
+            });
+        }
+    
+        function handleModalFileUpload(files) {
+            if (files.length > 0) {
+                const file = files[0];
+                document.getElementById('documentName').value = file.name.replace(/\.[^/.]+$/, ""); // Remove extension
+                updateCharCounter(document.getElementById('documentName'), 'documentNameCounter');
+            }
+        }
+    
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            document.getElementById(tabId).classList.add('active');
+            event.target.classList.add('active');
+        }
+    
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+    
+        function showUploadModal() {
+            if (currentUser.role === 'user') {
+                showToast('You do not have permission to upload documents', 'error');
+                return;
+            }
+    
+            document.getElementById('uploadModal').style.display = 'flex';
+        }
+    
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast';
+            
+            if (type === 'error') {
+                toast.classList.add('error');
+            } else {
+                toast.classList.add('success');
+            }
+            
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+    
+        function showNotification() {
+            showToast('This is a test notification!');
+        }
+    
+        function changeIframeSource() {
+            const iframe = document.getElementById('dashboardFrame');
+            const sources = [
+                'https://www.example.com',
+                'https://www.wikipedia.org',
+                'https://www.w3schools.com'
+            ];
+            const randomSource = sources[Math.floor(Math.random() * sources.length)];
+            iframe.src = randomSource;
+            showToast('Iframe content changed');
+        }
+    
+        async function exportToCSV() {
+    if (currentUser.role === 'user') {
+        showToast('You do not have permission to export data', 'error');
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE}/employees/export/csv`, {
+            headers: {
+                'Authorization': `Bearer ${authToken}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Export failed');
+        }
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `employees-export-${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+
+        showToast('Employee data exported successfully as CSV');
+    } catch (error) {
+        console.error('Failed to export CSV:', error);
+        showToast('Failed to export CSV', 'error');
+    }
+}
+    
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modals = document.getElementsByClassName('modal');
+            for (let i = 0; i < modals.length; i++) {
+                if (event.target === modals[i]) {
+                    modals[i].style.display = 'none';
+                }
+            }
+        }
+        
+        // Initialize URL routing on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const path = window.location.pathname;
+            const pageMap = {
+                '/': 'dashboardPage',
+                '/dashboard': 'dashboardPage',
+                '/add-employee': 'addEmployeePage',
+                '/employees': 'employeeListPage',
+                '/documents': 'documentsPage',
+                '/reports': 'reportsPage',
+                '/settings': 'settingsPage',
+                '/about': 'aboutPage',
+                '/access-denied': 'accessDeniedPage'
+            };
+            
+            // If user is already logged in (e.g., page refresh), show the appropriate page
+            if (currentUser) {
+                const targetPage = pageMap[path] || 'dashboardPage';
+                setTimeout(() => showPage(targetPage), 100);
+            }
+            
+            // Check if we have a saved token from previous session
+            const savedToken = localStorage.getItem('hr_token');
+            const savedUser = localStorage.getItem('hr_user');
+            
+            if (savedToken && savedUser) {
+                try {
+                    currentUser = JSON.parse(savedUser);
+                    authToken = savedToken;
+                    
+                    document.getElementById('loginPage').style.display = 'none';
+                    document.getElementById('dashboard').style.display = 'block';
+                    
+                    updateUIForUserRole();
+                    updateDashboard();
+                    renderEmployeeList();
+                    renderDocumentsList();
+                    
+                    const targetPage = pageMap[path] || 'dashboardPage';
+                    setTimeout(() => showPage(targetPage), 100);
+                } catch (e) {
+                    console.error('Failed to restore session:', e);
+                    localStorage.removeItem('hr_token');
+                    localStorage.removeItem('hr_user');
+                }
+            }
+        });
+        
+        // Save token and user to localStorage when logging in
+        const originalApiRequest = apiRequest;
+        apiRequest = async function(endpoint, options = {}) {
+            try {
+                const result = await originalApiRequest(endpoint, options);
+                
+                // If this is a login request, save the token
+                if (endpoint === '/login' && result.token) {
+                    localStorage.setItem('hr_token', result.token);
+                    localStorage.setItem('hr_user', JSON.stringify(result.user));
+                }
+                
+                return result;
+            } catch (error) {
+                throw error;
+            }
+        };
+        
+        // Clear localStorage on logout
+        const originalLogout = logout;
+        logout = function() {
+            localStorage.removeItem('hr_token');
+            localStorage.removeItem('hr_user');
+            originalLogout();
+        };
+    </script>
+</body>
+</html>

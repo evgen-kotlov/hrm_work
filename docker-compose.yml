@@ -1,0 +1,16 @@
+version: '3.3'
+
+services:
+  hr-system:
+    build: .
+    container_name: hr-system-backend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./uploads:/app/uploads
+      - ./index.html:/app/index.html
+    environment:
+      - NODE_ENV=production
+      - JWT_SECRET=your-secret-key-change-in-production
+      - PORT=3000
+    restart: unless-stopped
