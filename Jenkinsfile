@@ -1,11 +1,7 @@
 pipeline {
-    agent {
-        qatech_agent {
-            image 'mcr.microsoft.com/playwright:v1.58.2-jammy'
-            // аргументы не обязательны, но можно добавить при необходимости
-            args '--user root'
-        }
-    }
+    // Использование конкретного Jenkins-агента с именем 'qatech_agent'
+    agent { label 'qatech_agent' }
+
     parameters {
         choice(
             name: 'TEST_TAG',
@@ -13,23 +9,49 @@ pipeline {
             description: 'Выберите набор тестов для запуска: smoke, regress или все.'
         )
     }
+
+    environment {
+        // Директория для браузеров внутри рабочего пространства (чтобы не конфликтовать с другими сборками)
+        PLAYWRIGHT_BROWSERS_PATH = "${WORKSPACE}/ms-playwright"
+    }
+
     stages {
         stage('Checkout') {
             steps { checkout scm }
         }
-        stage('Run Tests') {
+
+        stage('Setup and Run Tests') {
             steps {
-                sh '''
+                sh '''#!/bin/bash
                     set -e
-                    echo "Node version: $(node --version)"
-                    echo "NPM version: $(npm --version)"
-                    echo "Playwright version: $(npx playwright --version)"
+                    set -x
 
-                    # Установка зависимостей проекта (требуется package-lock.json)
-                    npm ci
+                    echo "=== Установка nvm (если не установлен) ==="
+                    if [ ! -d "$HOME/.nvm" ]; then
+                        curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+                    fi
+                    export NVM_DIR="$HOME/.nvm"
+                    [ -s "$NVM_DIR/nvm.sh" ] && source "$NVM_DIR/nvm.sh"
 
-                    # Браузеры уже предустановлены в образе, поэтому команда install не нужна
-                    # Запуск тестов в зависимости от выбранного параметра
+                    echo "=== Установка Node.js 24.14.0 ==="
+                    nvm install 24.14.0
+                    nvm use 24.14.0
+                    node --version
+                    npm --version
+
+                    echo "=== Установка зависимостей проекта ==="
+                    npm ci   # или npm install, если package-lock.json отсутствует
+
+                    echo "=== Установка браузеров Playwright ==="
+                    # ВНИМАНИЕ: если на агенте отсутствуют системные библиотеки (libglib и др.),
+                    # необходимо либо установить их заранее, либо использовать --with-deps с правами root.
+                    # В текущем варианте устанавливаем только браузеры, без системных зависимостей.
+                    npx playwright install chromium
+
+                    echo "=== Проверка наличия браузеров ==="
+                    ls -la ${PLAYWRIGHT_BROWSERS_PATH} || echo "Папка браузеров не создана"
+
+                    echo "=== Запуск тестов с тегом: $TEST_TAG ==="
                     case "$TEST_TAG" in
                         smoke)   npm run test:smoke ;;
                         regress) npm run test:regress ;;
@@ -39,6 +61,7 @@ pipeline {
             }
         }
     }
+
     post {
         always {
             echo '=== Публикация отчетов и архивация артефактов ==='
@@ -53,7 +76,11 @@ pipeline {
             archiveArtifacts artifacts: 'allure-results/**', allowEmptyArchive: true
             cleanWs()
         }
-        failure { echo '❌ Тесты упали. Подробности в отчете выше.' }
-        success { echo '✅ Все тесты прошли успешно!' }
+        failure {
+            echo '❌ Тесты упали. Подробности в отчете выше.'
+        }
+        success {
+            echo '✅ Все тесты прошли успешно!'
+        }
     }
 }
