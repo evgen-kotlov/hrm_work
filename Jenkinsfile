@@ -1,13 +1,11 @@
 pipeline {
-    // Запускаем сборку в Docker-контейнере с официальным образом Playwright
     agent {
         docker {
             image 'mcr.microsoft.com/playwright:v1.58.2-jammy'
-            args '--user root'  // опционально, если нужны права на запись
+            args '--user root'
         }
     }
 
-    // Параметры для выбора набора тестов
     parameters {
         choice(
             name: 'TEST_TAG',
@@ -26,19 +24,29 @@ pipeline {
                 sh '''
                     set -e
                     echo "=== Информация об окружении ==="
-                    echo "Node version: $(node --version)"
-                    echo "NPM version: $(npm --version)"
-                    echo "Playwright version: $(npx playwright --version)"
+                    node --version
+                    npm --version
+                    npx playwright --version
 
-                    echo "=== Установка зависимостей проекта ==="
-                    npm ci   # или npm install, если нет package-lock.json
+                    echo "=== Установка зависимостей ==="
+                    npm ci
 
-                    echo "=== Запуск тестов с тегом: $TEST_TAG ==="
+                    echo "=== Запуск тестов ==="
                     case "$TEST_TAG" in
                         smoke)   npm run test:smoke ;;
                         regress) npm run test:regress ;;
                         *)       npm test ;;
                     esac
+
+                    echo "=== Проверка создания отчёта ==="
+                    if [ -d "playwright-report" ]; then
+                        echo "✅ Папка playwright-report существует"
+                        ls -la playwright-report/
+                    else
+                        echo "❌ Папка playwright-report НЕ создана"
+                        # Проверим, может быть отчёт в другом месте?
+                        find . -name "index.html" -type f || true
+                    fi
                 '''
             }
         }
@@ -47,10 +55,22 @@ pipeline {
     post {
         always {
             script {
-                // Явно указываем тот же узел, на котором выполнялась сборка,
-                // чтобы шаги publishHTML и archiveArtifacts имели доступ к файловой системе.
+                // Переключаемся на тот же узел, где выполнялась сборка
                 node(env.NODE_NAME) {
                     echo '=== Публикация отчетов и архивация артефактов ==='
+                    
+                    // Дополнительная проверка перед публикацией
+                    sh '''
+                        echo "Содержимое рабочей области:"
+                        ls -la
+                        if [ -d "playwright-report" ]; then
+                            echo "✅ Папка playwright-report найдена"
+                        else
+                            echo "❌ Папка playwright-report отсутствует"
+                        fi
+                    '''
+
+                    // Публикация HTML-отчёта
                     publishHTML(target: [
                         reportName: 'Playwright HTML Report',
                         reportDir: 'playwright-report',
@@ -58,9 +78,13 @@ pipeline {
                         keepAll: true,
                         allowMissing: true
                     ])
+
+                    // Архивация артефактов
                     archiveArtifacts artifacts: 'playwright-report/**', allowEmptyArchive: true
                     archiveArtifacts artifacts: 'allure-results/**', allowEmptyArchive: true
-                    cleanWs()  // очистка рабочего пространства
+
+                    // Очистка рабочей области
+                    cleanWs()
                 }
             }
         }
