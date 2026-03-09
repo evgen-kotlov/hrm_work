@@ -1,5 +1,8 @@
 pipeline {
-    agent { label 'qatech_agent' }
+    // Основной агент – узел с Docker, имеющий метку 'docker-agent'
+    agent { label 'docker-agent' }
+
+    // Параметры сборки для выбора набора тестов
     parameters {
         choice(
             name: 'TEST_TAG',
@@ -7,123 +10,75 @@ pipeline {
             description: 'Выберите набор тестов для запуска: smoke, regress или все.'
         )
     }
-    environment {
-        PLAYWRIGHT_BROWSERS_PATH = "${WORKSPACE}/ms-playwright"
-    }
+
     stages {
         stage('Checkout') {
-            steps { checkout scm }
-        }
-        stage('Install System Dependencies') {
             steps {
-                sh '''
-                    set -e
-                    echo "=== Обновление списка пакетов и установка зависимостей для браузера ==="
-                    apt-get update
-                    apt-get install -y \
-                        libnss3 \
-                        libnspr4 \
-                        libatk1.0-0t64 \
-                        libatk-bridge2.0-0t64 \
-                        libcups2t64 \
-                        libdrm2 \
-                        libxkbcommon0 \
-                        libxcomposite1 \
-                        libxdamage1 \
-                        libxfixes3 \
-                        libxrandr2 \
-                        libgbm1 \
-                        libpango-1.0-0 \
-                        libcairo2 \
-                        libasound2t64 \
-                        libatspi2.0-0t64 \
-                        libgtk-3-0t64 \
-                        libxcursor1 \
-                        libxi6 \
-                        libxrender1 \
-                        libxss1 \
-                        libxtst6 \
-                        libxcb-shm0 \
-                        fonts-noto-color-emoji \
-                        fonts-unifont \
-                        xvfb
-                '''
+                // Клонирование репозитория (используется настроенный SCM)
+                checkout scm
             }
         }
-        stage('Setup Node') {
-            steps {
-                sh '''
-                    set -e
-                    echo "=== Установка nvm ==="
-                    if [ ! -d "$HOME/.nvm" ]; then
-                        curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
-                    fi
-                    export NVM_DIR="$HOME/.nvm"
-                    [ -s "$NVM_DIR/nvm.sh" ] && source "$NVM_DIR/nvm.sh"
 
-                    echo "=== Установка Node.js 24.14.0 ==="
-                    nvm install 24.14.0
-                    nvm use 24.14.0
-                    node --version
-                    npm --version
-                '''
+        stage('Run Playwright Tests') {
+            // Запускаем тесты внутри Docker-контейнера с Playwright
+            agent {
+                docker {
+                    image 'mcr.microsoft.com/playwright:v1.58.2-noble'
+                    // Можно добавить аргументы, если нужны особые права
+                    args '--user root'
+                }
             }
-        }
-        stage('Install Node Dependencies') {
             steps {
-                sh '''
-                    export NVM_DIR="$HOME/.nvm"
-                    [ -s "$NVM_DIR/nvm.sh" ] && source "$NVM_DIR/nvm.sh"
-                    nvm use 24.14.0
+                script {
+                    // Определяем команду запуска тестов в зависимости от параметра
+                    def testCommand = ''
+                    switch (params.TEST_TAG) {
+                        case 'smoke':
+                            testCommand = 'npm run test:smoke'
+                            break
+                        case 'regress':
+                            testCommand = 'npm run test:regress'
+                            break
+                        case 'all':
+                        default:
+                            testCommand = 'npm test'
+                    }
 
-                    echo "=== Установка зависимостей проекта ==="
-                    npm ci
-                '''
-            }
-        }
-        stage('Install Playwright Browsers') {
-            steps {
-                sh '''
-                    export NVM_DIR="$HOME/.nvm"
-                    [ -s "$NVM_DIR/nvm.sh" ] && source "$NVM_DIR/nvm.sh"
-                    nvm use 24.14.0
+                    sh """
+                        set -e
+                        echo "Node version: \$(node --version)"
+                        echo "NPM version: \$(npm --version)"
+                        echo "Playwright version: \$(npx playwright --version)"
 
-                    echo "=== Установка браузеров Playwright ==="
-                    npx playwright install chromium
-                '''
-            }
-        }
-        stage('Run Tests') {
-            steps {
-                sh '''
-                    export NVM_DIR="$HOME/.nvm"
-                    [ -s "$NVM_DIR/nvm.sh" ] && source "$NVM_DIR/nvm.sh"
-                    nvm use 24.14.0
+                        echo "Установка зависимостей..."
+                        npm ci
 
-                    echo "=== Запуск тестов с тегом: $TEST_TAG ==="
-                    case "$TEST_TAG" in
-                        smoke)   npm run test:smoke ;;
-                        regress) npm run test:regress ;;
-                        *)       npm test ;;
-                    esac
-                '''
+                        echo "Запуск тестов..."
+                        ${testCommand}
+                    """
+                }
             }
         }
     }
+
     post {
         always {
+            // Действия, выполняемые всегда (публикация отчётов, архивация)
             script {
-                node(env.NODE_NAME) {
-                    echo '=== Публикация отчетов и архивация артефактов ==='
+                // Возвращаемся на основной агент, чтобы иметь доступ к рабочей области
+                node('docker-agent') {
+                    echo 'Публикация отчетов и архивация артефактов...'
+
+                    // Проверка наличия папки с отчётом
                     sh '''
-                        echo "Содержимое рабочей области:"
-                        ls -la
                         if [ -d "playwright-report" ]; then
                             echo "✅ Папка playwright-report найдена"
                         else
                             echo "❌ Папка playwright-report отсутствует"
                         fi
                     '''
+
+                    // Публикация HTML-отчёта Playwright
                     publishHTML(target: [
                         reportName: 'Playwright HTML Report',
                         reportDir: 'playwright-report',
@@ -131,8 +86,12 @@ pipeline {
                         keepAll: true,
                         allowMissing: true
                     ])
+
+                    // Архивация артефактов
                     archiveArtifacts artifacts: 'playwright-report/**', allowEmptyArchive: true
                     archiveArtifacts artifacts: 'allure-results/**', allowEmptyArchive: true
+
+                    // Очистка рабочей области (опционально)
                     cleanWs()
                 }
             }
