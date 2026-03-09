@@ -17,8 +17,8 @@ pipeline {
         stage('Setup and Run Tests') {
             steps {
                 sh '''#!/bin/bash
-                    set -e  # останавливать при ошибке
-                    set -x  # показывать выполняемые команды (для отладки)
+                    set -e
+                    set -x
 
                     echo "=== Установка nvm ==="
                     if [ ! -d "$HOME/.nvm" ]; then
@@ -40,7 +40,8 @@ pipeline {
                     npx playwright --version
 
                     echo "=== Установка браузеров Playwright в ${PLAYWRIGHT_BROWSERS_PATH} ==="
-                    npx playwright install --with-deps chromium
+                    # Убираем --with-deps, так как он требует root
+                    npx playwright install chromium
 
                     echo "=== Содержимое папки браузеров ==="
                     ls -la ${PLAYWRIGHT_BROWSERS_PATH} || echo "Папка не создана"
