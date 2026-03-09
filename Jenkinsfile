@@ -1,8 +1,13 @@
 pipeline {
-    // Основной агент – узел с Docker, имеющий метку 'docker-agent'
-    agent { label 'docker-agent' }
+    // Весь pipeline выполняется внутри Docker-контейнера на агенте с меткой 'docker-agent'
+    agent {
+        docker {
+            image 'mcr.microsoft.com/playwright:v1.58.2-noble'
+            label 'docker-agent'        // контейнер запустится именно на этом узле
+            args '--user root'          // опционально, если нужны права на запись
+        }
+    }
 
-    // Параметры сборки для выбора набора тестов
     parameters {
         choice(
             name: 'TEST_TAG',
@@ -14,90 +19,47 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                // Клонирование репозитория (используется настроенный SCM)
                 checkout scm
             }
         }
 
-        stage('Run Playwright Tests') {
-            // Запускаем тесты внутри Docker-контейнера с Playwright
-            agent {
-                docker {
-                    image 'mcr.microsoft.com/playwright:v1.58.2-noble'
-                    // Можно добавить аргументы, если нужны особые права
-                    args '--user root'
-                }
-            }
+        stage('Install Dependencies') {
             steps {
-                script {
-                    // Определяем команду запуска тестов в зависимости от параметра
-                    def testCommand = ''
-                    switch (params.TEST_TAG) {
-                        case 'smoke':
-                            testCommand = 'npm run test:smoke'
-                            break
-                        case 'regress':
-                            testCommand = 'npm run test:regress'
-                            break
-                        case 'all':
-                        default:
-                            testCommand = 'npm test'
-                    }
+                sh 'npm ci'
+            }
+        }
 
-                    sh """
-                        set -e
-                        echo "Node version: \$(node --version)"
-                        echo "NPM version: \$(npm --version)"
-                        echo "Playwright version: \$(npx playwright --version)"
-
-                        echo "Установка зависимостей..."
-                        npm ci
-
-                        echo "Запуск тестов..."
-                        ${testCommand}
-                    """
-                }
+        stage('Run Tests') {
+            steps {
+                sh """
+                    set -e
+                    echo "Запуск тестов с тегом: $TEST_TAG"
+                    case "$TEST_TAG" in
+                        smoke)   npm run test:smoke ;;
+                        regress) npm run test:regress ;;
+                        *)       npm test ;;
+                    esac
+                """
             }
         }
     }
 
     post {
         always {
-            // Действия, выполняемые всегда (публикация отчётов, архивация)
-            script {
-                // Возвращаемся на основной агент, чтобы иметь доступ к рабочей области
-                node('docker-agent') {
-                    echo 'Публикация отчетов и архивация артефактов...'
-
-                    // Проверка наличия папки с отчётом
-                    sh '''
-                        if [ -d "playwright-report" ]; then
-                            echo "✅ Папка playwright-report найдена"
-                        else
-                            echo "❌ Папка playwright-report отсутствует"
-                        fi
-                    '''
-
-                    // Публикация HTML-отчёта Playwright
-                    publishHTML(target: [
-                        reportName: 'Playwright HTML Report',
-                        reportDir: 'playwright-report',
-                        reportFiles: 'index.html',
-                        keepAll: true,
-                        allowMissing: true
-                    ])
-
-                    // Архивация артефактов
-                    archiveArtifacts artifacts: 'playwright-report/**', allowEmptyArchive: true
-                    archiveArtifacts artifacts: 'allure-results/**', allowEmptyArchive: true
-
-                    // Очистка рабочей области (опционально)
-                    cleanWs()
-                }
-            }
+            // Публикация отчётов – они уже в рабочей области контейнера
+            publishHTML(target: [
+                reportName: 'Playwright HTML Report',
+                reportDir: 'playwright-report',
+                reportFiles: 'index.html',
+                keepAll: true,
+                allowMissing: true
+            ])
+            archiveArtifacts artifacts: 'playwright-report/**', allowEmptyArchive: true
+            archiveArtifacts artifacts: 'allure-results/**', allowEmptyArchive: true
+            cleanWs()
         }
         failure {
-            echo '❌ Тесты упали. Подробности в отчете выше.'
+            echo '❌ Тесты упали. Подробности в отчёте.'
         }
         success {
             echo '✅ Все тесты прошли успешно!'
