@@ -1,4 +1,3 @@
-// Jenkinsfile для запуска Playwright тестов с подробной установкой браузеров
 pipeline {
     agent any
     parameters {
@@ -9,7 +8,6 @@ pipeline {
         )
     }
     environment {
-        // Переопределяем путь для кэша браузеров, чтобы избежать проблем с правами в ~/.cache
         PLAYWRIGHT_BROWSERS_PATH = "${WORKSPACE}/ms-playwright"
     }
     stages {
@@ -19,7 +17,8 @@ pipeline {
         stage('Setup and Run Tests') {
             steps {
                 sh '''#!/bin/bash
-                    set -e  # останавливать скрипт при любой ошибке
+                    set -e  # останавливать при ошибке
+                    set -x  # показывать выполняемые команды (для отладки)
 
                     echo "=== Установка nvm ==="
                     if [ ! -d "$HOME/.nvm" ]; then
@@ -35,13 +34,16 @@ pipeline {
                     echo "NPM version: $(npm --version)"
 
                     echo "=== Установка зависимостей проекта ==="
-                    npm ci  # или npm install, если package-lock.json отсутствует
+                    npm ci
+
+                    echo "=== Проверка версии Playwright ==="
+                    npx playwright --version
 
                     echo "=== Установка браузеров Playwright в ${PLAYWRIGHT_BROWSERS_PATH} ==="
-                    npx playwright install --with-deps chromium --verbose
+                    npx playwright install --with-deps chromium
 
-                    echo "=== Проверка установленных браузеров ==="
-                    ls -la ${PLAYWRIGHT_BROWSERS_PATH} || echo "Папка браузеров не создана"
+                    echo "=== Содержимое папки браузеров ==="
+                    ls -la ${PLAYWRIGHT_BROWSERS_PATH} || echo "Папка не создана"
 
                     echo "=== Запуск тестов с тегом: $TEST_TAG ==="
                     case "$TEST_TAG" in
