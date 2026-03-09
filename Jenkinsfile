@@ -26,7 +26,7 @@ pipeline {
         }
         stage('Setup Node') {
     steps {
-        sh '''
+        sh '''#!/bin/bash
             curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
             export NVM_DIR="$HOME/.nvm"
             [ -s "$NVM_DIR/nvm.sh" ] && source "$NVM_DIR/nvm.sh"
