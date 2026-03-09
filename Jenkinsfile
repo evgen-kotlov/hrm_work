@@ -1,6 +1,6 @@
 pipeline {
     agent {
-        docker {
+        qatech_agent {
             image 'mcr.microsoft.com/playwright:v1.58.2-jammy'
             // аргументы не обязательны, но можно добавить при необходимости
             args '--user root'
