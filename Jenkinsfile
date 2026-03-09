@@ -1,55 +1,46 @@
+// Jenkinsfile для запуска Playwright-тестов в Docker-контейнере с официальным образом Playwright
 pipeline {
-    // Использование конкретного Jenkins-агента с именем 'qatech_agent'
-    agent { label 'qatech_agent' }
+    // Используем Docker-агент на основе официального образа Playwright
+    agent {
+        docker {
+            image 'mcr.microsoft.com/playwright:v1.58.2-jammy'
+            // Можно добавить аргументы, например, для запуска от root (если нужны особые права)
+            args '--user root'
+        }
+    }
 
+    // Параметры сборки, доступные при ручном запуске
     parameters {
         choice(
             name: 'TEST_TAG',
             choices: ['smoke', 'regress', 'all'],
-            description: 'Выберите набор тестов для запуска: smoke, regress или все.'
+            description: 'Выберите набор тестов для запуска: smoke (дымовые), regress (регрессионные) или все.'
         )
     }
 
-    environment {
-        // Директория для браузеров внутри рабочего пространства (чтобы не конфликтовать с другими сборками)
-        PLAYWRIGHT_BROWSERS_PATH = "${WORKSPACE}/ms-playwright"
-    }
-
+    // Основные этапы сборки
     stages {
+        // Этап 1: Клонирование репозитория
         stage('Checkout') {
-            steps { checkout scm }
+            steps {
+                checkout scm
+            }
         }
 
-        stage('Setup and Run Tests') {
+        // Этап 2: Установка зависимостей и запуск тестов
+        stage('Run Tests') {
             steps {
-                sh '''#!/bin/bash
-                    set -e
-                    set -x
-
-                    echo "=== Установка nvm (если не установлен) ==="
-                    if [ ! -d "$HOME/.nvm" ]; then
-                        curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
-                    fi
-                    export NVM_DIR="$HOME/.nvm"
-                    [ -s "$NVM_DIR/nvm.sh" ] && source "$NVM_DIR/nvm.sh"
-
-                    echo "=== Установка Node.js 24.14.0 ==="
-                    nvm install 24.14.0
-                    nvm use 24.14.0
-                    node --version
-                    npm --version
+                sh '''
+                    set -e  # прерывать выполнение при любой ошибке
+                    echo "=== Информация об окружении ==="
+                    echo "Node version: $(node --version)"
+                    echo "NPM version: $(npm --version)"
+                    echo "Playwright version: $(npx playwright --version)"
 
                     echo "=== Установка зависимостей проекта ==="
-                    npm ci   # или npm install, если package-lock.json отсутствует
-
-                    echo "=== Установка браузеров Playwright ==="
-                    # ВНИМАНИЕ: если на агенте отсутствуют системные библиотеки (libglib и др.),
-                    # необходимо либо установить их заранее, либо использовать --with-deps с правами root.
-                    # В текущем варианте устанавливаем только браузеры, без системных зависимостей.
-                    npx playwright install chromium
-
-                    echo "=== Проверка наличия браузеров ==="
-                    ls -la ${PLAYWRIGHT_BROWSERS_PATH} || echo "Папка браузеров не создана"
+                    # Используем npm ci, так как в репозитории должен быть package-lock.json
+                    # Если lock-файла нет, замените на npm install
+                    npm ci
 
                     echo "=== Запуск тестов с тегом: $TEST_TAG ==="
                     case "$TEST_TAG" in
@@ -62,9 +53,11 @@ pipeline {
         }
     }
 
+    // Действия после завершения всех этапов (всегда выполняются)
     post {
         always {
             echo '=== Публикация отчетов и архивация артефактов ==='
+            // Публикация HTML-отчёта Playwright
             publishHTML(target: [
                 reportName: 'Playwright HTML Report',
                 reportDir: 'playwright-report',
@@ -72,8 +65,11 @@ pipeline {
                 keepAll: true,
                 allowMissing: true
             ])
+            // Архивация папки с отчётом Playwright
             archiveArtifacts artifacts: 'playwright-report/**', allowEmptyArchive: true
+            // Архивация результатов Allure (если используются)
             archiveArtifacts artifacts: 'allure-results/**', allowEmptyArchive: true
+            // Очистка рабочего пространства для экономии места
             cleanWs()
         }
         failure {
