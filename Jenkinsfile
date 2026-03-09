@@ -9,9 +9,7 @@ pipeline {
     }
     stages {
         stage('Checkout') {
-            steps {
-                checkout scm
-            }
+            steps { checkout scm }
         }
         stage('Setup and Run Tests') {
             steps {
@@ -22,15 +20,18 @@ pipeline {
                     fi
                     export NVM_DIR="$HOME/.nvm"
                     [ -s "$NVM_DIR/nvm.sh" ] && source "$NVM_DIR/nvm.sh"
-                    
-                    # Установка Node.js версии 24.14.0 (если доступна)
+
+                    # Установка Node.js 24.14.0 (если доступна)
                     nvm install 24.14.0
                     nvm use 24.14.0
                     node --version
                     npm --version
 
-                    # Установка зависимостей (требуется package-lock.json)
-                    npm ci
+                    # Установка зависимостей (используйте npm ci, если есть package-lock.json, иначе npm install)
+                    npm ci  # или npm install, если lock-файла нет
+
+                    # Установка браузеров Playwright
+                    npx playwright install --with-deps chromium
 
                     # Запуск тестов в зависимости от параметра
                     case "$TEST_TAG" in
@@ -53,15 +54,10 @@ pipeline {
                 allowMissing: true
             ])
             archiveArtifacts artifacts: 'playwright-report/**', allowEmptyArchive: true
-            archiveArtifacts artifacts: 'test-results/**', allowEmptyArchive: true
             archiveArtifacts artifacts: 'allure-results/**', allowEmptyArchive: true
             cleanWs()
         }
-        failure {
-            echo 'Тесты упали. Подробности в отчете выше.'
-        }
-        success {
-            echo 'Все тесты прошли успешно!'
-        }
+        failure { echo 'Тесты упали. Подробности в отчете выше.' }
+        success { echo 'Все тесты прошли успешно!' }
     }
 }
