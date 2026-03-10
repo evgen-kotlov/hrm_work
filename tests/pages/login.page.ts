@@ -17,7 +17,7 @@ export class LoginPage {
   }
 
   async goto() {
-    await this.page.goto('http://localhost:3001');
+    await this.page.goto('http://77.222.42.248:3001');
   }
 
   @step('Ввести логин {0} и пароль {1}')

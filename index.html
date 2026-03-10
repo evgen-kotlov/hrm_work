@@ -1376,7 +1376,7 @@
     <div class="toast" id="toast"></div>
 
     <script>
-        const API_BASE = 'http://localhost:3002/api';
+        const API_BASE = 'http://77.222.42.248:3002/api';
         let currentUser = null;
         let authToken = null;
         let currentEditId = null;
@@ -1774,7 +1774,7 @@
                         <tr>
                             <td>
                                 ${employee.photo ? 
-                                    `<img src="http://localhost:3001${employee.photo}" alt="${employee.firstName}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">` : 
+                                    `<img src="http://77.222.42.248:3001${employee.photo}" alt="${employee.firstName}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">` : 
                                     `<div style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #667eea, #764ba2); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">${employee.firstName?.charAt(0) || ''}${employee.lastName?.charAt(0) || ''}</div>`
                                 }
                             </td>
@@ -1840,7 +1840,7 @@
                     <div class="profile-header">
                         <div class="profile-avatar">
                             ${employee.photo ? 
-                                `<img src="http://localhost:3001${employee.photo}" alt="${employee.firstName} ${employee.lastName}">` : 
+                                `<img src="http://77.222.42.248:3001${employee.photo}" alt="${employee.firstName} ${employee.lastName}">` : 
                                 `${employee.firstName?.charAt(0) || ''}${employee.lastName?.charAt(0) || ''}`
                             }
                         </div>
@@ -1938,7 +1938,7 @@
                 
                 const preview = document.getElementById('photoPreview');
                 if (employee.photo) {
-                    preview.innerHTML = `<img src="http://localhost:3000${employee.photo}" alt="Employee Photo" class="photo-preview">`;
+                    preview.innerHTML = `<img src="http://77.222.42.248:3000${employee.photo}" alt="Employee Photo" class="photo-preview">`;
                 } else {
                     preview.innerHTML = '👤';
                     preview.className = 'photo-placeholder';
@@ -1990,7 +1990,7 @@
                         <tr>
                             <td>
                                 ${employee.photo ? 
-                                    `<img src="http://localhost:3001${employee.photo}" alt="${employee.firstName}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">` : 
+                                    `<img src="http://77.222.42.248:3001${employee.photo}" alt="${employee.firstName}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">` : 
                                     `<div style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #667eea, #764ba2); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">${employee.firstName?.charAt(0) || ''}${employee.lastName?.charAt(0) || ''}</div>`
                                 }
                             </td>

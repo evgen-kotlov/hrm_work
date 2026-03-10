@@ -780,14 +780,14 @@ app.listen(PORT, '0.0.0.0', () => {
   🚀 HR System Backend запущен!
   
   📍 Порт: ${PORT}
-  🌐 URL: http://localhost:${PORT}
+  🌐 URL: http://77.222.42.248:${PORT}
   
   🔑 Демо пользователи:
      - Админ:    Admin / admin123
      - Пользователь: User / user123
   
-  📊 Health check: http://localhost:${PORT}/api/health
-  📁 Загрузки:     http://localhost:${PORT}/uploads/
+  📊 Health check: http://77.222.42.248:${PORT}/api/health
+  📁 Загрузки:     http://77.222.42.248:${PORT}/uploads/
   
   ✅ Готов к работе!
   `);
