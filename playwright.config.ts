@@ -24,7 +24,7 @@ export default defineConfig({
   ],
   
   use: {
-    baseURL: 'http://77.222.42.248:3001',
+    baseURL: 'http://77.222.42.248:3002',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
