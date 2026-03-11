@@ -37,27 +37,23 @@ pipeline {
                 """
             }
         }
-
-        stage('Generate Allure Report') {
-            steps {
-                script {
-                    sh '''
-                        # Проверяем наличие allure-results
-                        if [ -d "allure-results" ]; then
-                            echo "Генерация Allure отчёта с помощью Docker-образа..."
-                            docker run --rm -v $(pwd):/workspace -w /workspace allure/allure:2.32.0 allure generate allure-results --clean -o allure-report
-                        else
-                            echo "Папка allure-results не найдена, пропускаем генерацию"
-                        fi
-                    '''
-                }
-            }
-        }
     }
 
     post {
         always {
             script {
+                // Генерация Allure отчёта вне контейнера Playwright (на агенте)
+                node('docker-agent') {
+                    sh '''
+                        if [ -d "allure-results" ]; then
+                            echo "Генерация Allure отчёта с помощью Docker-образа..."
+                            docker run --rm -v $(pwd):/workspace -w /workspace allure/allure:2.32.0 allure generate allure-results --clean -o allure-report
+                        else
+                            echo "Папка allure-results не найдена, пропускаем генерацию Allure"
+                        fi
+                    '''
+                }
+
                 // Публикация HTML-отчёта Playwright
                 publishHTML(target: [
                     reportName: 'Playwright HTML Report',
@@ -67,13 +63,13 @@ pipeline {
                     allowMissing: true
                 ])
 
-                // Публикация Allure-отчёта через плагин
-                allure([
-                    includeProperties: false,
-                    jdk: '',
-                    properties: [],
-                    reportBuildPolicy: 'ALWAYS',
-                    results: [[path: 'allure-results']]
+                // Публикация сгенерированного Allure отчёта как HTML
+                publishHTML(target: [
+                    reportName: 'Allure Report',
+                    reportDir: 'allure-report',
+                    reportFiles: 'index.html',
+                    keepAll: true,
+                    allowMissing: true
                 ])
 
                 // Архивация артефактов
