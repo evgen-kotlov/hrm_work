@@ -1,10 +1,9 @@
 pipeline {
-    // Весь pipeline выполняется внутри Docker-контейнера на агенте с меткой 'docker-agent'
     agent {
         docker {
             image 'mcr.microsoft.com/playwright:v1.58.2-noble'
-            label 'docker-agent'        // контейнер запустится именно на этом узле
-            args '--user root'          // опционально, если нужны права на запись
+            label 'docker-agent'
+            args '--user root'
         }
     }
 
@@ -18,15 +17,11 @@ pipeline {
 
     stages {
         stage('Checkout') {
-            steps {
-                checkout scm
-            }
+            steps { checkout scm }
         }
 
         stage('Install Dependencies') {
-            steps {
-                sh 'npm ci'
-            }
+            steps { sh 'npm ci' }
         }
 
         stage('Run Tests') {
@@ -42,21 +37,52 @@ pipeline {
                 """
             }
         }
+
+        stage('Generate Allure Report') {
+            steps {
+                script {
+                    sh '''
+                        # Проверяем наличие allure-results
+                        if [ -d "allure-results" ]; then
+                            echo "Генерация Allure отчёта с помощью Docker-образа..."
+                            docker run --rm -v $(pwd):/workspace -w /workspace allure/allure:2.32.0 allure generate allure-results --clean -o allure-report
+                        else
+                            echo "Папка allure-results не найдена, пропускаем генерацию"
+                        fi
+                    '''
+                }
+            }
+        }
     }
 
     post {
         always {
-            // Публикация отчётов – они уже в рабочей области контейнера
-            publishHTML(target: [
-                reportName: 'Playwright HTML Report',
-                reportDir: 'playwright-report',
-                reportFiles: 'index.html',
-                keepAll: true,
-                allowMissing: true
-            ])
-            archiveArtifacts artifacts: 'playwright-report/**', allowEmptyArchive: true
-            archiveArtifacts artifacts: 'allure-results/**', allowEmptyArchive: true
-            cleanWs()
+            script {
+                // Публикация HTML-отчёта Playwright
+                publishHTML(target: [
+                    reportName: 'Playwright HTML Report',
+                    reportDir: 'playwright-report',
+                    reportFiles: 'index.html',
+                    keepAll: true,
+                    allowMissing: true
+                ])
+
+                // Публикация Allure-отчёта через плагин
+                allure([
+                    includeProperties: false,
+                    jdk: '',
+                    properties: [],
+                    reportBuildPolicy: 'ALWAYS',
+                    results: [[path: 'allure-results']]
+                ])
+
+                // Архивация артефактов
+                archiveArtifacts artifacts: 'playwright-report/**', allowEmptyArchive: true
+                archiveArtifacts artifacts: 'allure-results/**', allowEmptyArchive: true
+                archiveArtifacts artifacts: 'allure-report/**', allowEmptyArchive: true
+
+                cleanWs()
+            }
         }
         failure {
             echo '❌ Тесты упали. Подробности в отчёте.'
