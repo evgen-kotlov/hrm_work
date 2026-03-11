@@ -39,7 +39,7 @@ export const test = base.extend<MyFixtures>({
     await use(new SettingsPage(page));
   },
   apiClient: async ({}, use) => {
-    const client = new ApiClient('http://77.222.42.248:3001');
+    const client = new ApiClient('http://77.222.42.248:3002');
     await use(client);
   },
 
@@ -51,7 +51,7 @@ export const test = base.extend<MyFixtures>({
     await loginPage.login('Admin', 'admin123');
     await page.waitForSelector('.dashboard');
 
-    const apiClient = new ApiClient('http://77.222.42.248:3001');
+    const apiClient = new ApiClient('http://77.222.42.248:3002');
     await apiClient.login('Admin', 'admin123');
 
     await use({ page, apiClient });
@@ -66,7 +66,7 @@ export const test = base.extend<MyFixtures>({
     await loginPage.login('User', 'user123');
     await page.waitForSelector('.dashboard');
 
-    const apiClient = new ApiClient('http://77.222.42.248:3001');
+    const apiClient = new ApiClient('http://77.222.42.248:3002');
     await apiClient.login('User', 'user123');
 
     await use({ page, apiClient });
