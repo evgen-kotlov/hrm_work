@@ -53,14 +53,14 @@ pipeline {
                         fi
                     '''
                 }
-
+                junit 'test-results/junit-report.xml'
                 // Публикация HTML-отчёта Playwright
                 publishHTML(target: [
                     reportName: 'Playwright HTML Report',
                     reportDir: 'playwright-report',
                     reportFiles: 'index.html',
                     keepAll: true,
-                    allowMissing: true
+                    allowMissing: false
                 ])
 
                 // Публикация сгенерированного Allure отчёта как HTML
