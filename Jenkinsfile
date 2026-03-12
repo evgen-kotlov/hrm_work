@@ -15,12 +15,12 @@ pipeline {
             steps { checkout scm }
         }
 
+        // Все шаги, требующие Node.js/Playwright, выполняются внутри официального контейнера
         stage('Run Tests inside Playwright container') {
-            // Все шаги с Node.js выполняются внутри контейнера Playwright
             agent {
                 docker {
                     image 'mcr.microsoft.com/playwright:v1.58.2-noble'
-                    reuseNode true
+                    reuseNode true          // использует тот же узел и рабочую область
                     args '--user root'
                 }
             }
@@ -64,7 +64,7 @@ pipeline {
     post {
         always {
             script {
-                // Публикация JUnit отчёта (если он создан)
+                // Публикация JUnit отчёта (если настроен в playwright.config.ts)
                 junit allowEmptyResults: true, testResults: 'test-results/junit-report.xml'
 
                 // Публикация HTML-отчёта Playwright
@@ -76,7 +76,7 @@ pipeline {
                     allowMissing: true
                 ])
 
-                // Публикация сгенерированного Allure отчёта как HTML
+                // Публикация сгенерированного Allure отчёта как HTML (через HTML Publisher)
                 publishHTML(target: [
                     reportName: 'Allure Report',
                     reportDir: 'allure-report',
