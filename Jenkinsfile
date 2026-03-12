@@ -1,55 +1,114 @@
 pipeline {
-    agent any
-    
-    tools {
-        nodejs 'NodeJS_24.14.0' // Укажите имя вашей Node.js установки в Jenkins
+    agent {
+        docker {
+            image 'mcr.microsoft.com/playwright:v1.40.0-focal'
+            args '-u root:root --shm-size=2gb'
+            reuseNode true
+        }
     }
     
     environment {
         CI = 'true'
-        PLAYWRIGHT_BROWSERS_PATH = '0' // Использовать системные браузеры
+        PLAYWRIGHT_BROWSERS_PATH = '0'
+        ALLURE_VERSION = '2.24.0'
     }
     
     stages {
         stage('Checkout') {
             steps {
-                checkout scm
+                checkout([
+                    $class: 'GitSCM',
+                    branches: [[name: '*/main']],
+                    extensions: [],
+                    userRemoteConfigs: [[url: 'https://github.com/your-repo/your-project.git']]
+                ])
             }
         }
         
-        stage('Install dependencies') {
+        stage('Setup Environment') {
             steps {
-                sh 'npm ci' // Используем ci для чистых установок
+                script {
+                    // Установка Allure
+                    sh '''
+                        wget -q https://github.com/allure-framework/allure2/releases/download/${ALLURE_VERSION}/allure-${ALLURE_VERSION}.tgz
+                        tar -xzf allure-${ALLURE_VERSION}.tgz
+                        rm allure-${ALLURE_VERSION}.tgz
+                        ln -s $(pwd)/allure-${ALLURE_VERSION}/bin/allure /usr/local/bin/allure
+                    '''
+                    
+                    // Проверка версий
+                    sh '''
+                        echo "=== Environment Info ==="
+                        node --version
+                        npm --version
+                        npx playwright --version
+                        allure --version
+                    '''
+                }
             }
         }
         
-        stage('Install Playwright browsers') {
+        stage('Install Dependencies') {
             steps {
-                sh 'npx playwright install chromium --with-deps'
+                sh '''
+                    npm ci --no-audit --prefer-offline
+                    npx playwright install chromium --with-deps
+                '''
             }
         }
         
-        stage('Run Playwright tests') {
+        stage('Run Tests') {
             steps {
                 script {
                     try {
-                        sh 'npx playwright test'
+                        sh '''
+                            npx playwright test 
+                                --reporter=line,allure-playwright,junit 
+                                --output=test-results
+                        '''
                     } catch (error) {
-                        // Тесты могут падать, но мы все равно хотим получить отчеты
-                        echo "Tests failed, but continuing to generate reports..."
+                        echo "Tests failed: ${error}"
                         currentBuild.result = 'UNSTABLE'
                     }
                 }
             }
+        }
+        
+        stage('Generate Reports') {
+            steps {
+                script {
+                    // Генерация Allure отчета
+                    sh '''
+                        allure generate allure-results --clean -o allure-report
+                        
+                        # Создаем index.html для удобного просмотра
+                        echo '<!DOCTYPE html>
+                        <html>
+                        <head>
+                            <meta http-equiv="refresh" content="0; url=allure-report/index.html">
+                            <title>Allure Report</title>
+                        </head>
+                        <body>
+                            <p>Redirecting to <a href="allure-report/index.html">Allure Report</a></p>
+                        </body>
+                        </html>' > allure-index.html
+                    '''
+                    
+                    // Генерация HTML отчета Playwright
+                    sh 'npx playwright show-report playwright-report || true'
+                }
+            }
             post {
                 always {
-                    // Сохраняем HTML отчет
+                    // Сохраняем все отчеты
+                    archiveArtifacts artifacts: 'allure-report/**/*', allowEmptyArchive: true
                     archiveArtifacts artifacts: 'playwright-report/**/*', allowEmptyArchive: true
+                    archiveArtifacts artifacts: 'test-results/**/*', allowEmptyArchive: true
+                    archiveArtifacts artifacts: 'allure-index.html', allowEmptyArchive: true
+                    // Публикуем JUnit отчет
+                    junit 'test-results/junit.xml'
                     
-                    // Сохраняем JUnit отчет
-                    junit 'test-results/junit-report.xml'
-                    
-                    // Сохраняем Allure результаты
+                    // Публикуем Allure отчет
                     allure([
                         includeProperties: false,
                         jdk: '',
@@ -60,22 +119,43 @@ pipeline {
                 }
             }
         }
-        
-        stage('Generate Allure Report') {
-            steps {
-                script {
-                    // Генерируем Allure отчет локально (опционально)
-                    sh 'npx allure generate allure-results --clean -o allure-report'
-                    archiveArtifacts artifacts: 'allure-report/**/*', allowEmptyArchive: true
-                }
-            }
-        }
     }
     
     post {
         always {
-            // Очистка (опционально)
-            sh 'rm -rf node_modules playwright-report allure-results allure-report test-results || true'
+            script {
+                // Сохраняем скриншоты и видео при падении
+                if (currentBuild.result == 'FAILURE' || currentBuild.result == 'UNSTABLE') {
+                    archiveArtifacts artifacts: 'test-results/**/*.png', allowEmptyArchive: true
+                    archiveArtifacts artifacts: 'test-results/**/*.webm', allowEmptyArchive: true
+                }
+                
+                // Очистка (сохраняем только отчеты)
+                sh '''
+                    rm -rf node_modules allure-${ALLURE_VERSION} || true
+                    find . -name "*.log" -type f -delete || true
+                '''
+            }
+            
+            // Уведомления (опционально)
+            emailext(
+                subject: "Build ${currentBuild.result}: Job '${env.JOB_NAME}' (${env.BUILD_NUMBER})",
+                body: "Проверьте сборку: ${env.BUILD_URL}",
+                to: 'team@example.com',
+                attachLog: true
+            )
+        }
+        
+        success {
+            echo '✅ Все этапы выполнены успешно!'
+        }
+        
+        failure {
+            echo '❌ Сборка завершилась с ошибкой'
+        }
+        
+        unstable {
+            echo '⚠️ Сборка нестабильна (упали тесты)'
         }
     }
 }
