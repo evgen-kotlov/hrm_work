@@ -1,11 +1,6 @@
 pipeline {
-    agent {
-        docker {
-            image 'mcr.microsoft.com/playwright:v1.58.2-noble'
-            label 'docker-agent'
-            args '--user root'
-        }
-    }
+    // Корневой агент — узел с Docker (метка 'docker-agent')
+    agent { label 'docker-agent' }
 
     parameters {
         choice(
@@ -25,6 +20,14 @@ pipeline {
         }
 
         stage('Run Tests') {
+            // Запускаем тесты внутри Docker-контейнера Playwright на том же узле
+            agent {
+                docker {
+                    image 'mcr.microsoft.com/playwright:v1.58.2-noble'
+                    reuseNode true
+                    args '--user root'
+                }
+            }
             steps {
                 sh """
                     set -e
@@ -37,13 +40,10 @@ pipeline {
                 """
             }
         }
-    }
 
-    post {
-        always {
-            script {
-                // Генерация Allure отчёта вне контейнера Playwright (на агенте)
-                node('docker-agent') {
+        stage('Generate Allure Report') {
+            steps {
+                script {
                     sh '''
                         if [ -d "allure-results" ]; then
                             echo "Генерация Allure отчёта с помощью Docker-образа..."
@@ -53,14 +53,23 @@ pipeline {
                         fi
                     '''
                 }
-                junit 'test-results/junit-report.xml'
+            }
+        }
+    }
+
+    post {
+        always {
+            script {
+                // Публикация JUnit отчёта (если он создан)
+                junit allowEmptyResults: true, testResults: 'test-results/junit-report.xml'
+
                 // Публикация HTML-отчёта Playwright
                 publishHTML(target: [
                     reportName: 'Playwright HTML Report',
                     reportDir: 'playwright-report',
                     reportFiles: 'index.html',
                     keepAll: true,
-                    allowMissing: false
+                    allowMissing: true
                 ])
 
                 // Публикация сгенерированного Allure отчёта как HTML
@@ -76,6 +85,7 @@ pipeline {
                 archiveArtifacts artifacts: 'playwright-report/**', allowEmptyArchive: true
                 archiveArtifacts artifacts: 'allure-results/**', allowEmptyArchive: true
                 archiveArtifacts artifacts: 'allure-report/**', allowEmptyArchive: true
+                archiveArtifacts artifacts: 'test-results/**', allowEmptyArchive: true
 
                 cleanWs()
             }
