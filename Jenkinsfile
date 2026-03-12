@@ -2,7 +2,7 @@ pipeline {
     agent any
     
     tools {
-        nodejs 'NodeJS' // Укажите имя вашей Node.js установки в Jenkins
+        nodejs 'NodeJS_24.14.0' // Укажите имя вашей Node.js установки в Jenkins
     }
     
     environment {
