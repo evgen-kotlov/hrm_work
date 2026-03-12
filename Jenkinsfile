@@ -15,12 +15,8 @@ pipeline {
             steps { checkout scm }
         }
 
-        stage('Install Dependencies') {
-            steps { sh 'npm ci' }
-        }
-
-        stage('Run Tests') {
-            // Запускаем тесты внутри Docker-контейнера Playwright на том же узле
+        stage('Run Tests inside Playwright container') {
+            // Все шаги с Node.js выполняются внутри контейнера Playwright
             agent {
                 docker {
                     image 'mcr.microsoft.com/playwright:v1.58.2-noble'
@@ -28,16 +24,24 @@ pipeline {
                     args '--user root'
                 }
             }
-            steps {
-                sh """
-                    set -e
-                    echo "Запуск тестов с тегом: $TEST_TAG"
-                    case "$TEST_TAG" in
-                        smoke)   npm run test:smoke ;;
-                        regress) npm run test:regress ;;
-                        *)       npm test ;;
-                    esac
-                """
+            stages {
+                stage('Install Dependencies') {
+                    steps { sh 'npm ci' }
+                }
+
+                stage('Run Tests') {
+                    steps {
+                        sh """
+                            set -e
+                            echo "Запуск тестов с тегом: $TEST_TAG"
+                            case "$TEST_TAG" in
+                                smoke)   npm run test:smoke ;;
+                                regress) npm run test:regress ;;
+                                *)       npm test ;;
+                            esac
+                        """
+                    }
+                }
             }
         }
 
