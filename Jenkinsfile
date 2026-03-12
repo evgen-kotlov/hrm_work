@@ -20,8 +20,23 @@ pipeline {
                     $class: 'GitSCM',
                     branches: [[name: '*/main']],
                     extensions: [],
-                    userRemoteConfigs: [[url: 'https://github.com/your-repo/your-project.git']]
+                    userRemoteConfigs: [[
+                        url: 'https://github.com/evgen-kotlov/hrm_work.git',
+                        credentialsId: '' // Оставьте пустым если публичный репозиторий
+                    ]]
                 ])
+                
+                // Альтернативный вариант через sh
+                sh '''
+                    git --version
+                    if [ ! -d ".git" ]; then
+                        echo "Cloning repository..."
+                        git clone https://github.com/evgen-kotlov/hrm_work.git .
+                    else
+                        echo "Repository already exists, pulling updates..."
+                        git pull origin main
+                    fi
+                '''
             }
         }
         
@@ -30,10 +45,15 @@ pipeline {
                 script {
                     // Установка Allure
                     sh '''
-                        wget -q https://github.com/allure-framework/allure2/releases/download/${ALLURE_VERSION}/allure-${ALLURE_VERSION}.tgz
-                        tar -xzf allure-${ALLURE_VERSION}.tgz
-                        rm allure-${ALLURE_VERSION}.tgz
-                        ln -s $(pwd)/allure-${ALLURE_VERSION}/bin/allure /usr/local/bin/allure
+                        echo "=== Installing Allure ==="
+                        if [ ! -f "/usr/local/bin/allure" ]; then
+                            wget -q https://github.com/allure-framework/allure2/releases/download/${ALLURE_VERSION}/allure-${ALLURE_VERSION}.tgz
+                            tar -xzf allure-${ALLURE_VERSION}.tgz
+                            rm allure-${ALLURE_VERSION}.tgz
+                            ln -s $(pwd)/allure-${ALLURE_VERSION}/bin/allure /usr/local/bin/allure
+                        else
+                            echo "Allure already installed"
+                        fi
                     '''
                     
                     // Проверка версий
@@ -41,8 +61,8 @@ pipeline {
                         echo "=== Environment Info ==="
                         node --version
                         npm --version
-                        npx playwright --version
-                        allure --version
+                        npx playwright --version || echo "Playwright not installed yet"
+                        allure --version || echo "Allure not in PATH"
                     '''
                 }
             }
@@ -51,8 +71,14 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 sh '''
-                    npm ci --no-audit --prefer-offline
-                    npx playwright install chromium --with-deps
+                    echo "=== Installing dependencies ==="
+                    if [ -f "package.json" ]; then
+                        npm ci --no-audit --prefer-offline
+                        npx playwright install chromium --with-deps
+                    else
+                        echo "ERROR: package.json not found!"
+                        exit 1
+                    fi
                 '''
             }
         }
@@ -62,6 +88,7 @@ pipeline {
                 script {
                     try {
                         sh '''
+                            echo "=== Running tests ==="
                             npx playwright test 
                                 --reporter=line,allure-playwright,junit 
                                 --output=test-results
@@ -79,23 +106,32 @@ pipeline {
                 script {
                     // Генерация Allure отчета
                     sh '''
-                        allure generate allure-results --clean -o allure-report
-                        
-                        # Создаем index.html для удобного просмотра
-                        echo '<!DOCTYPE html>
-                        <html>
-                        <head>
-                            <meta http-equiv="refresh" content="0; url=allure-report/index.html">
-                            <title>Allure Report</title>
-                        </head>
-                        <body>
-                            <p>Redirecting to <a href="allure-report/index.html">Allure Report</a></p>
-                        </body>
-                        </html>' > allure-index.html
+                        echo "=== Generating reports ==="
+                        if [ -d "allure-results" ]; then
+                            allure generate allure-results --clean -o allure-report
+                            
+                            # Создаем index.html для удобного просмотра
+                            echo '<!DOCTYPE html>
+                            <html>
+                            <head>
+                                <meta http-equiv="refresh" content="0; url=allure-report/index.html">
+                                <title>Allure Report</title>
+                            </head>
+                            <body>
+                                <p>Redirecting to <a href="allure-report/index.html">Allure Report</a></p>
+                            </body>
+                            </html>' > allure-index.html
+                        else
+                            echo "No allure-results directory found"
+                        fi
                     '''
                     
                     // Генерация HTML отчета Playwright
-                    sh 'npx playwright show-report playwright-report || true'
+                    sh '''
+                        if [ -d "playwright-report" ]; then
+                            npx playwright show-report playwright-report || true
+                        fi
+                    '''
                 }
             }
             post {
@@ -105,6 +141,7 @@ pipeline {
                     archiveArtifacts artifacts: 'playwright-report/**/*', allowEmptyArchive: true
                     archiveArtifacts artifacts: 'test-results/**/*', allowEmptyArchive: true
                     archiveArtifacts artifacts: 'allure-index.html', allowEmptyArchive: true
+                    
                     // Публикуем JUnit отчет
                     junit 'test-results/junit.xml'
                     
@@ -124,15 +161,22 @@ pipeline {
     post {
         always {
             script {
+                echo "=== Cleanup and artifacts ==="
                 // Сохраняем скриншоты и видео при падении
                 if (currentBuild.result == 'FAILURE' || currentBuild.result == 'UNSTABLE') {
+                    sh '''
+                        echo "Saving screenshots and videos..."
+                        find test-results -name "*.png" -o -name "*.webm" | head -20
+                    '''
                     archiveArtifacts artifacts: 'test-results/**/*.png', allowEmptyArchive: true
                     archiveArtifacts artifacts: 'test-results/**/*.webm', allowEmptyArchive: true
                 }
                 
                 // Очистка (сохраняем только отчеты)
                 sh '''
-                    rm -rf node_modules allure-${ALLURE_VERSION} || true
+                    echo "Cleaning up..."
+                    rm -rf node_modules || true
+                    rm -rf allure-${ALLURE_VERSION} || true
                     find . -name "*.log" -type f -delete || true
                 '''
             }
