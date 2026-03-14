@@ -1,90 +1,78 @@
 pipeline {
-    agent {
-        docker {
-            image 'mcr.microsoft.com/playwright:v1.58.2-noble'
-            label 'docker-agent'
-            args '--user root'
-        }
+    agent any
+
+    tools {
+        nodejs 'NodeJS_24.14.0'   // имя инструмента из глобальной конфигурации Jenkins
     }
 
-    parameters {
-        choice(
-            name: 'TEST_TAG',
-            choices: ['smoke', 'regress', 'all'],
-            description: 'Выберите набор тестов для запуска: smoke, regress или все.'
-        )
+    environment {
+        CI = 'true'
+        // Версия Playwright образа должна совпадать с версией @playwright/test в package.json
+        PLAYWRIGHT_IMAGE = 'mcr.microsoft.com/playwright:v1.58.2-jammy'
     }
 
     stages {
         stage('Checkout') {
-            steps { checkout scm }
-        }
-
-        stage('Install Dependencies') {
-            steps { sh 'npm ci' }
-        }
-
-        stage('Run Tests') {
             steps {
-                sh """
-                    set -e
-                    echo "Запуск тестов с тегом: $TEST_TAG"
-                    case "$TEST_TAG" in
-                        smoke)   npm run test:smoke ;;
-                        regress) npm run test:regress ;;
-                        *)       npm test ;;
-                    esac
-                """
+                checkout scm
             }
         }
-    }
 
-    post {
-        always {
-            script {
-                // Генерация Allure отчёта вне контейнера Playwright (на агенте)
-                node('docker-agent') {
-                    sh '''
-                        if [ -d "allure-results" ]; then
-                            echo "Генерация Allure отчёта с помощью Docker-образа..."
-                            docker run --rm -v $(pwd):/workspace -w /workspace allure/allure:2.32.0 allure generate allure-results --clean -o allure-report
-                        else
-                            echo "Папка allure-results не найдена, пропускаем генерацию Allure"
-                        fi
-                    '''
+        stage('Install dependencies') {
+            steps {
+                // Устанавливаем зависимости на хосте Jenkins (агента)
+                // Они не будут использоваться для запуска тестов в контейнере,
+                // но могут пригодиться для линтеров или дополнительных шагов.
+                // Если не нужны – этот stage можно пропустить.
+                sh 'npm ci'
+            }
+        }
+
+        stage('Run Playwright tests') {
+            steps {
+                script {
+                    // Запускаем тесты в контейнере Playwright
+                    // Пробрасываем текущую директорию (код проекта) как /work
+                    // и выполняем npm ci + тесты.
+                    sh """
+                        docker run --rm \
+                            -v \$(pwd):/work \
+                            -w /work \
+                            -e CI=true \
+                            \${PLAYWRIGHT_IMAGE} \
+                            sh -c "npm ci && npx playwright test"
+                    """
                 }
-
-                // Публикация HTML-отчёта Playwright
-                publishHTML(target: [
-                    reportName: 'Playwright HTML Report',
-                    reportDir: 'playwright-report',
-                    reportFiles: 'index.html',
-                    keepAll: true,
-                    allowMissing: true
-                ])
-
-                // Публикация сгенерированного Allure отчёта как HTML
-                publishHTML(target: [
-                    reportName: 'Allure Report',
-                    reportDir: 'allure-report',
-                    reportFiles: 'index.html',
-                    keepAll: true,
-                    allowMissing: true
-                ])
-
-                // Архивация артефактов
-                archiveArtifacts artifacts: 'playwright-report/**', allowEmptyArchive: true
-                archiveArtifacts artifacts: 'allure-results/**', allowEmptyArchive: true
-                archiveArtifacts artifacts: 'allure-report/**', allowEmptyArchive: true
-
-                cleanWs()
             }
-        }
-        failure {
-            echo '❌ Тесты упали. Подробности в отчёте.'
-        }
-        success {
-            echo '✅ Все тесты прошли успешно!'
+            post {
+                always {
+                    // Публикация JUnit отчёта (если он создаётся)
+                    junit 'test-results/junit-report.xml'
+
+                    // Публикация HTML отчёта Playwright
+                    publishHTML([
+                        reportDir: 'playwright-report',
+                        reportFiles: 'index.html',
+                        reportName: 'Playwright HTML Report',
+                        allowMissing: false,
+                        keepAll: true
+                    ])
+
+                    // Сохранение сырых результатов Allure (если используется)
+                    // Для генерации отчёта Allure нужен плагин и наличие Java на агентах.
+                    // Если Java нет, можно сохранить allure-results как артефакт и генерировать отдельно.
+                    allure([
+                        includeProperties: false,
+                        jdk: '',
+                        properties: [],
+                        reportBuildPolicy: 'ALWAYS',
+                        results: [[path: 'allure-results']]
+                    ])
+
+                    // Также можно сохранять видео, скриншоты и т.д. как артефакты
+                    archiveArtifacts artifacts: 'test-results/**/*, playwright-report/**/*, allure-results/**/*', fingerprint: true
+                }
+            }
         }
     }
 }
