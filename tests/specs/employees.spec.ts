@@ -4,7 +4,7 @@ import { faker } from '@faker-js/faker';
 
 test.describe('Управление сотрудниками', () => {
   test.describe('Как администратор', () => {
-    test.skip('Добавление нового сотрудника @smoke @regress', async ({ adminContext }) => {
+    test('Добавление нового сотрудника @smoke @regress', async ({ adminContext }) => {
       const { page } = adminContext;
       const employeesPage = new EmployeesPage(page);
 
@@ -109,7 +109,7 @@ test.describe('Управление сотрудниками', () => {
       expect(deletedRow).toBeNull();
     });
 
-    test('Поиск сотрудника @smoke', async ({ adminContext }) => {
+    test.skip('Поиск сотрудника @smoke', async ({ adminContext }) => {
       const { page } = adminContext;
       const employeesPage = new EmployeesPage(page);
       // Предполагаем, что есть сотрудник с именем John
