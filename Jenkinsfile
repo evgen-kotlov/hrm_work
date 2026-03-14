@@ -45,34 +45,29 @@ pipeline {
                 }
             }
             post {
-                always {
-                    // Публикация JUnit отчёта (если он создаётся)
-                    junit 'test-results/junit-report.xml'
+    always {
+        junit 'test-results/junit-report.xml'
 
-                    // Публикация HTML отчёта Playwright
-                    publishHTML([
-                        reportDir: 'playwright-report',
-                        reportFiles: 'index.html',
-                        reportName: 'Playwright HTML Report',
-                        allowMissing: false,
-                        keepAll: true
-                    ])
+        publishHTML([
+            reportDir: 'playwright-report',
+            reportFiles: 'index.html',
+            reportName: 'Playwright HTML Report',
+            allowMissing: false,
+            keepAll: true,
+            alwaysLinkToLastBuild: true
+        ])
 
-                    // Сохранение сырых результатов Allure (если используется)
-                    // Для генерации отчёта Allure нужен плагин и наличие Java на агентах.
-                    // Если Java нет, можно сохранить allure-results как артефакт и генерировать отдельно.
-                    allure([
-                        includeProperties: false,
-                        jdk: '',
-                        properties: [],
-                        reportBuildPolicy: 'ALWAYS',
-                        results: [[path: 'allure-results']]
-                    ])
+        allure([
+            includeProperties: false,
+            jdk: '',
+            properties: [],
+            reportBuildPolicy: 'ALWAYS',
+            results: [[path: 'allure-results']]
+        ])
 
-                    // Также можно сохранять видео, скриншоты и т.д. как артефакты
-                    archiveArtifacts artifacts: 'test-results/**/*, playwright-report/**/*, allure-results/**/*', fingerprint: true
-                }
-            }
+        archiveArtifacts artifacts: 'test-results/**/*, playwright-report/**/*, allure-results/**/*', fingerprint: true
+    }
+}
         }
     }
 }
