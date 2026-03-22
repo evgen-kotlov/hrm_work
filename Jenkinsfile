@@ -1,56 +1,48 @@
 pipeline {
-    agent { label 'docker-agent' }
+    agent any  // или укажите конкретный лейбл агента
 
-    environment {
-        CI = 'true'
+    tools {
+        nodejs 'NodeJS-18'  // если настроен инструмент NodeJS в Jenkins
     }
 
     stages {
-        stage('Checkout') {
-            steps {
-                checkout scm
-            }
-        }
-
         stage('Install dependencies') {
             steps {
-                sh 'npm ci'
+                script {
+                    sh 'npm install'
+                    sh 'npx playwright install-deps'
+                    sh 'npx playwright install'
+                    sh 'npm install --save-dev allure-commandline'
+                }
             }
         }
 
-        stage('Run Playwright tests') {
+        stage('Run tests') {
             steps {
-                sh 'npx playwright test'
+                script {
+                    // Убедимся, что папка allure-results чиста перед запуском
+                    sh 'rm -rf allure-results'
+                    sh 'npx playwright test'
+                }
+            }
+        }
+
+        stage('Generate Allure report') {
+            steps {
+                script {
+                    // Генерация HTML-отчёта (можно и не делать, если используем плагин)
+                    sh 'npx allure generate allure-results --clean -o allure-report'
+                }
             }
         }
     }
 
     post {
         always {
-            // JUnit отчёт
-            junit 'test-results/junit-report.xml'
-
-            // HTML отчёт Playwright
-            publishHTML([
-                reportDir: 'playwright-report',
-                reportFiles: 'index.html',
-                reportName: 'Playwright HTML Report',
-                allowMissing: false,
-                keepAll: true,
-                alwaysLinkToLastBuild: true
-            ])
-
-            // Allure отчёт (если используете)
-            allure([
-                includeProperties: false,
-                jdk: '',
-                properties: [],
-                reportBuildPolicy: 'ALWAYS',
-                results: [[path: 'allure-results']]
-            ])
-
-            // Архивация артефактов
-            archiveArtifacts artifacts: 'test-results/**/*, playwright-report/**/*, allure-results/**/*', fingerprint: true
+            // Архивируем результаты Allure как артефакты Jenkins (на всякий случай)
+            archiveArtifacts artifacts: 'allure-results/**', fingerprint: true
+            // Публикуем Allure-отчёт через плагин (он сам сгенерирует отчёт из allure-results)
+            allure includeProperties: false, jdk: '', results: [[path: 'allure-results']]
         }
     }
 }
