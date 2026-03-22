@@ -2,7 +2,7 @@ pipeline {
     agent any  // или укажите конкретный лейбл агента
 
     tools {
-        nodejs 'NodeJS-18'  // если настроен инструмент NodeJS в Jenkins
+        nodejs 'NodeJS_24.14.0'  // если настроен инструмент NodeJS в Jenkins
     }
 
     stages {
